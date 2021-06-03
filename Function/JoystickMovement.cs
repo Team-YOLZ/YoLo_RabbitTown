@@ -59,6 +59,7 @@ public class JoystickMovement : MonoBehaviour
             player_rb.rotation = Quaternion.LookRotation(new Vector3(joystickVec.x * _speed, 0, joystickVec.y * _speed));
         }
     }
+      
 
     public void PointDown() //조이스틱 터치시 event
     {

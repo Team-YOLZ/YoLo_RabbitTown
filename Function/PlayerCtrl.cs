@@ -24,22 +24,24 @@ public class PlayerCtrl : MonoBehaviour
     public float _speed = 10f;
     public Animator player_anim;
     Rigidbody rb;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         player_anim = GetComponent<Animator>();
     }
 
-    //void FixedUpdate()
-    //{
-    //    float moveHorizontal = Input.GetAxis("Horizontal");
-    //    float moveVertical = Input.GetAxis("Vertical");
+    void FixedUpdate()
+    {
+        if (Application.platform == RuntimePlatform.WindowsEditor)
+        {
+            float moveHorizontal = Input.GetAxis("Horizontal");
+            float moveVertical = Input.GetAxis("Vertical");
 
-    //    rb.velocity = new Vector3(moveHorizontal * _speed, rb.velocity.y, moveVertical * _speed);
-    //     if(JoystickMovement.Instance.joystickVec.x != 0 || JoystickMovement.Instance.joystickVec.y != 0)
-    //    {
-    //        rb.velocity = new Vector3(JoystickMovement.Instance.joystickVec.x, rb.velocity.y, JoystickMovement.Instance.joystickVec.y);
-    //        rb.rotation = Quaternion.LookRotation(new Vector3(JoystickMovement.Instance.joystickVec.x, 0, JoystickMovement.Instance.joystickVec.y));
-    //    }
-    //}
+            player_anim.SetFloat("Move", Mathf.Abs(moveHorizontal) + Mathf.Abs(moveVertical));
+
+            rb.velocity = new Vector3(moveHorizontal * _speed, 0, moveVertical * _speed);
+            rb.rotation = Quaternion.LookRotation(new Vector3(moveHorizontal * _speed, 0, Mathf.Abs(moveVertical) * _speed));
+        }
+    }
 }
