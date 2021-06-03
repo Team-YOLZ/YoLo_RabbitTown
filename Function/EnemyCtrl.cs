@@ -6,10 +6,12 @@ public class EnemyCtrl : MonoBehaviour
     public NavMeshAgent agent;
 
     public Transform player;
+    public Vector3 Mine;// 자신 위치.
 
     public LayerMask whatIsGround, whatIsPlayer;
 
-    public float health; //피통
+    public float Maxhealth; //전체 피통.
+    public float health; //현재 피통.
 
     //순찰.
     public Vector3 walkPoint;
@@ -27,10 +29,13 @@ public class EnemyCtrl : MonoBehaviour
     public bool playerInSightRange; //아마 불값 다른코드에서 가져다 쓸 것 같아서 public
     public bool playerInAttackRange;
 
+
     private void Awake()
     {
         player = GameObject.Find("player").transform;
+        Mine = transform.position;
         agent = GetComponent<NavMeshAgent>();
+        health = Maxhealth;
     }
 
     private void Update()
@@ -79,14 +84,11 @@ public class EnemyCtrl : MonoBehaviour
         //nevmesh set destination을 player로.
         agent.SetDestination(transform.position);
 
-        transform.LookAt(player);//y포스는 고정할지 고민중.
+        //transform.LookAt(player,Vector3.up);//y포스는 고정할지 고민중. Rotation 코드.
 
         if (!alreadyAttacked)
         {
             //공격코드 (원거리,근거리 등등 여기서 적 구분해서 지정할 예정.)
-            //Rigidbody rb = Instantiate(projectile, transform.position, Quaternion.identity).GetComponent<Rigidbody>();
-            //rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
-            //rb.AddForce(transform.up * 8f, ForceMode.Impulse);
 
             //공격코드 끝.
 
@@ -103,12 +105,23 @@ public class EnemyCtrl : MonoBehaviour
     {
         health -= damage;
 
-        if (health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
+        if (health <= 0) Invoke(nameof(DeactiveDelay), 0.5f); //Death Animation 실행위해.
     }
-    private void DestroyEnemy()
+    //object Pooler Control
+    private void OnEnable()//활성화시 객체 초기화 로직.
     {
-        Destroy(gameObject);
+        gameObject.transform.position = Mine;
+        health = Maxhealth;
     }
+    private void OnDisable()
+    {
+        //ObjectPooler.ReturnToPool(gameObject);
+        CancelInvoke();
+        Invoke(nameof(ReSpawn),5f);
+    }
+
+    private void DeactiveDelay() => gameObject.SetActive(false);
+    private void ReSpawn() => gameObject.SetActive(true); //Respawn
 
     private void OnDrawGizmosSelected() //공격 범위 순찰 범위 영역 보기 위해.
     {
