@@ -9,10 +9,10 @@ public class JoystickMovement : MonoBehaviour
     {
         get
         {
-            if(instance ==null)
+            if (instance == null)
             {
                 instance = FindObjectOfType<JoystickMovement>();
-                if(Instance == null)
+                if (Instance == null)
                 {
                     var instanceContainer = new GameObject("JoystickMovement");
                     instance = instanceContainer.AddComponent<JoystickMovement>();
