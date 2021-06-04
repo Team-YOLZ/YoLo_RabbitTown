@@ -22,37 +22,30 @@ public class PlayerCtrl : MonoBehaviour
     }
     private static PlayerCtrl instance;
     public float _speed = 10f;
-    public Animator player_anim;
+    public GameObject obj_player;
+    public GameObject obj_playerCameraArm; //cinemachine Fallow Target
+    Animator player_anim;
     Rigidbody rb;
-    public GameObject[] enemy1;
+
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        player_anim = GetComponent<Animator>();
-        enemy1 = GameObject.FindGameObjectsWithTag("Enemy1");//ìž„ì‹œ ê³µê²© ì½”ë“œ ìœ„í•œ Searchë¬¸.
+        rb = obj_player.GetComponent<Rigidbody>();
+        player_anim = obj_player.GetComponent<Animator>();
     }
-    private void Update()
+
+    void FixedUpdate()
     {
-        //ìž„ì‹œ ê³µê²© ì½”ë“œ.
-        if(Input.GetKeyDown(KeyCode.A))
+        if (Application.platform == RuntimePlatform.WindowsEditor) //Editor¿¡¼­ Å×½ºÆ®ÇÏ±â ÆíÇÏµµ·Ï
         {
-            for(int i=0; i<enemy1.Length; i++)
-            {
-                enemy1[i].GetComponent<EnemyCtrl>().TakeDamage(5);
-            }
+            float moveHorizontal = Input.GetAxis("Horizontal");
+            float moveVertical = Input.GetAxis("Vertical");
+
+            player_anim.SetFloat("Move", Mathf.Abs(moveHorizontal) + Mathf.Abs(moveVertical)); //¾Ö´Ï¸ÞÀÌ¼Ç SetTrigger -> FloatÀ¸·Î º¯°æ
+
+            rb.velocity = new Vector3(moveHorizontal * _speed, 0, moveVertical * _speed);            
         }
+
+        //CameraArmÀÇ °æ¿ì Playerº¸´Ù »ìÂ¦ À§·Î µÎ°í Player¿Í RotationÀº °øÀ¯ÇÏÁö ¾ÊÀ½
+        obj_playerCameraArm.transform.position = new Vector3(player_anim.transform.position.x, player_anim.transform.position.y + 3.5f, player_anim.transform.position.z);
     }
-
-    //void FixedUpdate()
-    //{
-    //    float moveHorizontal = Input.GetAxis("Horizontal");
-    //    float moveVertical = Input.GetAxis("Vertical");
-
-    //    rb.velocity = new Vector3(moveHorizontal * _speed, rb.velocity.y, moveVertical * _speed);
-    //     if(JoystickMovement.Instance.joystickVec.x != 0 || JoystickMovement.Instance.joystickVec.y != 0)
-    //    {
-    //        rb.velocity = new Vector3(JoystickMovement.Instance.joystickVec.x, rb.velocity.y, JoystickMovement.Instance.joystickVec.y);
-    //        rb.rotation = Quaternion.LookRotation(new Vector3(JoystickMovement.Instance.joystickVec.x, 0, JoystickMovement.Instance.joystickVec.y));
-    //    }
-    //}
 }

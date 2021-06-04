@@ -40,23 +40,18 @@ public class JoystickMovement : MonoBehaviour
     void Start()
     {
         circleradius = _bigcircle.gameObject.GetComponent<RectTransform>().sizeDelta.y / 2; //조이스틱 이동반경원 size 초기화.
-        bigfirstposition = _bigcircle.transform.position;
-        player_anim = player.GetComponent<Animator>();
+        bigfirstposition = _bigcircle.transform.position;        
         player_rb = player.GetComponent<Rigidbody>();
+        player_anim = player.GetComponent<Animator>();
     }
 
     private void FixedUpdate()
     {
-        //float moveHorizontal = Input.GetAxis("Horizontal");
-        //float moveVertical = Input.GetAxis("Vertical");
-
-        //Debug.Log("horizontal" + moveHorizontal);
-        //Debug.Log("vertical" + moveVertical);
-        //player_rb.velocity = new Vector3(moveHorizontal * _speed, player_rb.velocity.y, moveVertical * _speed);
         if (joystickVec.x < 0 | joystickVec.y < 0 | joystickVec.x > 0 |joystickVec.x < 0)
         {
             player_rb.velocity = new Vector3(joystickVec.x *_speed, player_rb.velocity.y, joystickVec.y * _speed);
             player_rb.rotation = Quaternion.LookRotation(new Vector3(joystickVec.x * _speed, 0, joystickVec.y * _speed));
+            player_anim.SetFloat("Move", Mathf.Abs(joystickVec.x) + Mathf.Abs(joystickVec.y)); //애니메이션 SetTrigger -> Float으로 변경
         }
     }
       
@@ -75,8 +70,6 @@ public class JoystickMovement : MonoBehaviour
             _smallcircle.transform.position = Input.mousePosition;
 
             TouchPosition = Input.mousePosition; // 터치후 드래그시 방향벡터 잡아오기 위한 변수.
-            //이 위치에 케릭터 이동 애니메이션 SetTrigger 넣어주면 될 것 같습니다.
-            player_anim.SetTrigger("Run");
         }
     }
     public void Drag(BaseEventData baseEventData)
@@ -107,7 +100,5 @@ public class JoystickMovement : MonoBehaviour
         //조이스틱 위치초기화.
         _bigcircle.transform.position = bigfirstposition;
         _smallcircle.transform.position = bigfirstposition;
-        //이 위치에 케릭터 Idle 애니메이션 SetTrigger 넣어주면 될 것 같습니다.
-        player_anim.SetTrigger("Idle");
     }
 }
