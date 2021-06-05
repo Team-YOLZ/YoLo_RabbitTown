@@ -4,6 +4,17 @@ using UnityEngine;
 
 public class Define
 {
+    public enum WorldObject
+    {
+        Unknown,
+        Tree,
+        Grass,
+        Flower,
+        Rock,
+        Well,
+        Cloud,
+        Bush,
+    }
     public enum UIEvent
     {
         Click,
