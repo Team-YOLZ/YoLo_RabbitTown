@@ -45,17 +45,4 @@ public class PlayerCtrl : MonoBehaviour
             }
         }
     }
-
-    void FixedUpdate()
-    {
-        if (Application.platform == RuntimePlatform.WindowsEditor) //Editor에서 테스트하기 편하도록
-        {
-            float moveHorizontal = Input.GetAxis("Horizontal");
-            float moveVertical = Input.GetAxis("Vertical");
-
-            player_anim.SetFloat("Move", Mathf.Abs(moveHorizontal) + Mathf.Abs(moveVertical)); //애니메이션 SetTrigger -> Float으로 변경
-
-            rb.velocity = new Vector3(moveHorizontal * _speed, 0, moveVertical * _speed);            
-        }        
-    }
 }

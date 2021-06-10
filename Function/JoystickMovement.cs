@@ -27,6 +27,7 @@ public class JoystickMovement : MonoBehaviour
     [SerializeField] Vector3 joystickVec;
 
     public GameObject player;
+    public Transform obj_CameraArm;
 
     private static JoystickMovement instance;
     Vector3 TouchPosition;
@@ -50,13 +51,30 @@ public class JoystickMovement : MonoBehaviour
     }
 
     private void FixedUpdate()
-    {
-        if (joystickVec.y > 0 | joystickVec.y < 0 | joystickVec.x > 0 | joystickVec.x < 0)
+    {        
+        Debug.DrawRay(obj_CameraArm.position, new Vector3(obj_CameraArm.forward.x, 0f, obj_CameraArm.forward.z).normalized, Color.red);
+
+        //카메라의 forward 중심으로 방향벡터 설정 https://forum.unity.com/threads/what-is-transform-forward.338384/ 참고
+        Vector3 CameraVecVertical = new Vector3(obj_CameraArm.forward.x, 0f, obj_CameraArm.forward.z).normalized;
+        Vector3 CameraVecHorizontal= new Vector3(obj_CameraArm.right.x, 0f, obj_CameraArm.right.z).normalized;
+
+        //Editor에서 테스트하기 편하도록 - 애니메이션, rotation은 x position 변경만(테스트용 - 코드 낭비 x)
+        if (Application.platform == RuntimePlatform.WindowsEditor && joystickVec.magnitude == 0) 
         {
-            player_rb.velocity = new Vector3(joystickVec.x * _speed, player_rb.velocity.y, joystickVec.y * _speed);
-            player_rb.rotation = Quaternion.LookRotation(new Vector3(joystickVec.x * _speed, 0, joystickVec.y * _speed));
-            player_anim.SetFloat("Move", Mathf.Abs(joystickVec.x) + Mathf.Abs(joystickVec.y)); //애니메이션 SetTrigger -> Float으로 변경
+            float moveHorizontal = Input.GetAxis("Horizontal");
+            float moveVertical = Input.GetAxis("Vertical");
+
+            Vector3 moveDIr = CameraVecVertical * moveVertical + CameraVecHorizontal * moveHorizontal;            
+            player.transform.position += moveDIr * _speed * Time.deltaTime;
         }
+
+        if (joystickVec.magnitude != 0) //https://docs.unity3d.com/ScriptReference/Vector3-magnitude.html
+        {
+            Vector3 moveDIr = CameraVecVertical * joystickVec.y + CameraVecHorizontal * joystickVec.x;
+
+            player.transform.forward = moveDIr; //rotation(방향)조절, 계속 앞을 봐야한다면 CameraVecForward;
+            player.transform.position += moveDIr * _speed * Time.deltaTime;                    
+        }        
     }
 
     public void PointDown(BaseEventData baseEventData) //조이스틱 터치시 event
@@ -69,6 +87,8 @@ public class JoystickMovement : MonoBehaviour
         _smallcircle.position = inputPos;
 
         joystickVec = (inputPos - firstposition).normalized;
+
+        player_anim.SetTrigger("Run");
     }
 
     public void Drag(BaseEventData baseEventData)
@@ -78,7 +98,7 @@ public class JoystickMovement : MonoBehaviour
         PointerEventData pointerEventData = baseEventData as PointerEventData;
         Vector3 DragPosition = pointerEventData.position; // 드레그 중인 포인터 위치.
 
-        joystickVec = (DragPosition - firstposition).normalized;//드레그 방향벡터. (이동코드에 사용할 예정.)
+        joystickVec = (DragPosition - firstposition).normalized;//드레그 방향벡터.
 
         float joystickDistance = Vector3.Distance(DragPosition, firstposition);
 
@@ -99,5 +119,7 @@ public class JoystickMovement : MonoBehaviour
         //스틱 위치 방향 벡터 초기화
         _smallcircle.anchoredPosition = Vector2.zero;
         joystickVec = Vector3.zero;
+
+        player_anim.SetTrigger("Idle");
     }
 }

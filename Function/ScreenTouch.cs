@@ -9,10 +9,11 @@ public class ScreenTouch : MonoBehaviour
     public Transform obj_CameraArm;    
 
     public float dragSpeed = 1f;
-    float CameraArm_Y = 3.5f;
+    float CameraArm_Y = 3.5f; //default
 
     private void FixedUpdate()
-    {
+    {        
+        //rotation 범위, default = player.y + 3.5f;
         if (CameraArm_Y < 3.5f) CameraArm_Y = 3.5f;
         if (CameraArm_Y > 20f) CameraArm_Y = 20f;
 
@@ -32,9 +33,13 @@ public class ScreenTouch : MonoBehaviour
         {
             Debug.Log("RightScreen_Drag");
 
+            //mouse의 x축을 중심으로 값을 받아와서 rotation.y 변경
             obj_CameraArm.Rotate(0f, Input.GetAxis("Mouse X") * dragSpeed, 0f);
+
+            //mouse의 y축을 중심으로 값을 받아와서 position.y 변경 (카메라의 x축을 바꾸는게 아니라 CameraArm의 y축을 변경)
             obj_CameraArm.Translate(new Vector3(0f, Input.GetAxis("Mouse Y") * dragSpeed, 0f));
-            CameraArm_Y = obj_CameraArm.position.y - obj_player.position.y;
+
+            CameraArm_Y = obj_CameraArm.position.y - obj_player.position.y; //CameraArm.position.y는 플레이어의 Position.y에 + 해야함
         }        
     }
 
