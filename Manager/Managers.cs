@@ -24,6 +24,13 @@ public class Managers : MonoBehaviour
 
     PoolManager _pool = new PoolManager();
     public static PoolManager Pool { get { return Instance._pool; } }
+
+    GameManager _game = new GameManager();
+    public static GameManager Game { get { return Instance._game; } }
+
+    NetworkManger _network =  new NetworkManger();
+    public static NetworkManger Network { get { return Instance._network; } }
+
     // Start is called before the first frame update
     void Start()
     {

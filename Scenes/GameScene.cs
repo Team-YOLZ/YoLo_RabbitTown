@@ -12,6 +12,10 @@ public class GameScene : BaseScene
     {
         base.Init();
         SceneType = Define.Scene.Game;
+
+        //GameObject go = new GameObject { name = "WorldObj" };
+        //WorldObjectGenerator pool = go.GetOrAddComponent<WorldObjectGenerator>();
+        //pool.SetTreeCount(5);
     }
     public override void Clear()
     {
