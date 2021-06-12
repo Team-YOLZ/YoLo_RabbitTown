@@ -47,7 +47,7 @@ public class JoystickMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (joystickVec.x < 0 | joystickVec.y < 0 | joystickVec.x > 0 |joystickVec.x < 0)
+        if (joystickVec.y > 0 | joystickVec.y < 0 | joystickVec.x > 0 |joystickVec.x < 0)
         {
             player_rb.velocity = new Vector3(joystickVec.x *_speed, player_rb.velocity.y, joystickVec.y * _speed);
             player_rb.rotation = Quaternion.LookRotation(new Vector3(joystickVec.x * _speed, 0, joystickVec.y * _speed));
