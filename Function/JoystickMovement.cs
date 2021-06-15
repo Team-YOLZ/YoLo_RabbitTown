@@ -22,83 +22,104 @@ public class JoystickMovement : MonoBehaviour
         }
     }
 
-    public GameObject _smallcircle;
-    public GameObject _bigcircle;
-    public Vector3 joystickVec;
+    public RectTransform _smallcircle;
+    private RectTransform _bigcircle;
+    [SerializeField] Vector3 joystickVec;
+
     public GameObject player;
+    public Transform obj_CameraArm;
 
     private static JoystickMovement instance;
     Vector3 TouchPosition;
-    Vector3 bigfirstposition;
-    Vector3 smallfirstposition;
+    Vector3 firstposition;
     float circleradius;
-    private bool leftwidthtouch = false;
     private Animator player_anim;
     Rigidbody player_rb;
-    public float _speed = 5f;
+    public float _speed;
+
+    void Awake()
+    {
+        _bigcircle = GetComponent<RectTransform>();
+    }
 
     void Start()
     {
-        circleradius = _bigcircle.gameObject.GetComponent<RectTransform>().sizeDelta.y / 2; //조이스틱 이동반경원 size 초기화.
-        bigfirstposition = _bigcircle.transform.position;        
+        circleradius = _bigcircle.sizeDelta.y / 5; //조이스틱 이동반경원 size 초기화.
+        firstposition = _smallcircle.position;
         player_rb = player.GetComponent<Rigidbody>();
         player_anim = player.GetComponent<Animator>();
     }
 
     private void FixedUpdate()
-    {
-        if (joystickVec.y > 0 | joystickVec.y < 0 | joystickVec.x > 0 |joystickVec.x < 0)
-        {
-            player_rb.velocity = new Vector3(joystickVec.x *_speed, player_rb.velocity.y, joystickVec.y * _speed);
-            player_rb.rotation = Quaternion.LookRotation(new Vector3(joystickVec.x * _speed, 0, joystickVec.y * _speed));
-            player_anim.SetFloat("Move", Mathf.Abs(joystickVec.x) + Mathf.Abs(joystickVec.y)); //애니메이션 SetTrigger -> Float으로 변경
-        }
-    }
-      
+    {        
+        Debug.DrawRay(obj_CameraArm.position, new Vector3(obj_CameraArm.forward.x, 0f, obj_CameraArm.forward.z).normalized, Color.red);
 
-    public void PointDown() //조이스틱 터치시 event
-    {
-        if (Input.mousePosition.x > Screen.width / 2) //화면 오른쪽은 조이스틱 키작동 X
-        {
-            leftwidthtouch = false;
-            return;
-        }
-        else //화면 왼쪽만 가능
-        {
-            leftwidthtouch = true;
-            _bigcircle.transform.position = Input.mousePosition;
-            _smallcircle.transform.position = Input.mousePosition;
+        //카메라의 forward 중심으로 방향벡터 설정 https://forum.unity.com/threads/what-is-transform-forward.338384/ 참고
+        Vector3 CameraVecVertical = new Vector3(obj_CameraArm.forward.x, 0f, obj_CameraArm.forward.z).normalized;
+        Vector3 CameraVecHorizontal= new Vector3(obj_CameraArm.right.x, 0f, obj_CameraArm.right.z).normalized;
 
-            TouchPosition = Input.mousePosition; // 터치후 드래그시 방향벡터 잡아오기 위한 변수.
+        //Editor에서 테스트하기 편하도록 - 애니메이션, rotation은 x position 변경만(테스트용 - 코드 낭비 x)
+        if (Application.platform == RuntimePlatform.WindowsEditor && joystickVec.magnitude == 0) 
+        {
+            float moveHorizontal = Input.GetAxis("Horizontal");
+            float moveVertical = Input.GetAxis("Vertical");
+
+            Vector3 moveDIr = CameraVecVertical * moveVertical + CameraVecHorizontal * moveHorizontal;            
+            player.transform.position += moveDIr * _speed * Time.deltaTime;
         }
+
+        if (joystickVec.magnitude != 0) //https://docs.unity3d.com/ScriptReference/Vector3-magnitude.html
+        {
+            Vector3 moveDIr = CameraVecVertical * joystickVec.y + CameraVecHorizontal * joystickVec.x;
+
+            player.transform.forward = moveDIr; //rotation(방향)조절, 계속 앞을 봐야한다면 CameraVecForward;
+            player.transform.position += moveDIr * _speed * Time.deltaTime;                    
+        }        
     }
+
+    public void PointDown(BaseEventData baseEventData) //조이스틱 터치시 event
+    {
+        Debug.Log("Joystick_Point down");
+
+        PointerEventData pointerEventData = baseEventData as PointerEventData;
+
+        Vector3 inputPos = pointerEventData.position;
+        _smallcircle.position = inputPos;
+
+        joystickVec = (inputPos - firstposition).normalized;
+
+        player_anim.SetTrigger("Run");
+    }
+
     public void Drag(BaseEventData baseEventData)
     {
-        if (leftwidthtouch == true)
+        Debug.Log("Joystick_Drag");
+
+        PointerEventData pointerEventData = baseEventData as PointerEventData;
+        Vector3 DragPosition = pointerEventData.position; // 드레그 중인 포인터 위치.
+
+        joystickVec = (DragPosition - firstposition).normalized;//드레그 방향벡터.
+
+        float joystickDistance = Vector3.Distance(DragPosition, firstposition);
+
+        if (joystickDistance < circleradius) //조이스틱의 작은 원이 범위를 벗어나지 않게.
         {
-            PointerEventData pointerEventData = baseEventData as PointerEventData;
-            Vector3 DragPosition = pointerEventData.position; // 드레그 중인 포인터 위치.
-
-            joystickVec = (DragPosition - TouchPosition).normalized;//드레그 방향벡터. (이동코드에 사용할 예정.)
-            
-            float joystickDistance = Vector3.Distance(DragPosition, TouchPosition);
-
-            if (joystickDistance < circleradius) //조이스틱의 작은 원이 범위를 벗어나지 않게.
-            {
-                _smallcircle.transform.position = TouchPosition + joystickVec * joystickDistance;
-            }
-            else
-            {
-                _smallcircle.transform.position = TouchPosition + joystickVec * circleradius;
-            }
+            _smallcircle.transform.position = firstposition + joystickVec * joystickDistance;
+        }
+        else
+        {
+            _smallcircle.transform.position = firstposition + joystickVec * circleradius;
         }
     }
+
     public void Drop()
     {
+        Debug.Log("Joystick_Joystick_Drop");
+
+        //스틱 위치 방향 벡터 초기화
+        _smallcircle.anchoredPosition = Vector2.zero;
         joystickVec = Vector3.zero;
-        leftwidthtouch = false;
-        //조이스틱 위치초기화.
-        _bigcircle.transform.position = bigfirstposition;
-        _smallcircle.transform.position = bigfirstposition;
+
+        player_anim.SetTrigger("Idle");
     }
 }
