@@ -25,6 +25,7 @@ public class JoystickMovement : MonoBehaviour
     public RectTransform _smallcircle;
     private RectTransform _bigcircle;
     [SerializeField] Vector3 joystickVec;
+    float joystickDistance;
 
     public GameObject player;
     public Transform obj_CameraArm;
@@ -68,7 +69,7 @@ public class JoystickMovement : MonoBehaviour
             player.transform.position += moveDIr * _speed * Time.deltaTime;
         }
 
-        if (joystickVec.magnitude != 0) //https://docs.unity3d.com/ScriptReference/Vector3-magnitude.html
+        if (joystickVec.magnitude != 0 && joystickDistance > 5f) //https://docs.unity3d.com/ScriptReference/Vector3-magnitude.html
         {
             Vector3 moveDIr = CameraVecVertical * joystickVec.y + CameraVecHorizontal * joystickVec.x;
 
@@ -88,7 +89,12 @@ public class JoystickMovement : MonoBehaviour
 
         joystickVec = (inputPos - firstposition).normalized;
 
-        player_anim.SetTrigger("Run");
+        joystickDistance = Vector3.Distance(inputPos, firstposition);
+        if (joystickDistance > 5f)
+        {
+            player_anim.ResetTrigger("Idle");
+            player_anim.SetTrigger("Run");
+        }        
     }
 
     public void Drag(BaseEventData baseEventData)
@@ -100,7 +106,18 @@ public class JoystickMovement : MonoBehaviour
 
         joystickVec = (DragPosition - firstposition).normalized;//드레그 방향벡터.
 
-        float joystickDistance = Vector3.Distance(DragPosition, firstposition);
+        joystickDistance = Vector3.Distance(DragPosition, firstposition);
+
+        if (joystickDistance > 5f)
+        {
+            player_anim.ResetTrigger("Idle");
+            player_anim.SetTrigger("Run");
+        }
+        else
+        {
+            player_anim.ResetTrigger("Run");
+            player_anim.SetTrigger("Idle");
+        }
 
         if (joystickDistance < circleradius) //조이스틱의 작은 원이 범위를 벗어나지 않게.
         {
@@ -120,6 +137,7 @@ public class JoystickMovement : MonoBehaviour
         _smallcircle.anchoredPosition = Vector2.zero;
         joystickVec = Vector3.zero;
 
+        player_anim.ResetTrigger("Run");
         player_anim.SetTrigger("Idle");
     }
 }
