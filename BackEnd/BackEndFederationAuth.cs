@@ -8,6 +8,17 @@ using UnityEngine.SignInWithApple;
 #endif
 public class BackEndFederationAuth : MonoBehaviour
 {
+    [SerializeField] private GameObject GoogleLoginBtn;
+    [SerializeField] private GameObject AppleLoginBtn;
+    private void Awake()
+    {
+#if UNITY_ANDROID
+        GoogleLoginBtn.SetActive(true);
+#elif UNITY_IOS
+        AppleLoginBtn.SetActive(true);
+#endif
+    }
+
     void Start()
     {
 #if UNITY_ANDROID
@@ -29,6 +40,9 @@ public class BackEndFederationAuth : MonoBehaviour
         if (bro.IsSuccess())
         {
             Managers.Scene.LoadScene(Define.Scene.Main);
+            //BackendReturnObject bro2 = Backend.BMember.GetUserInfo();
+            //string federationId = bro2.GetReturnValuetoJSON()["row"]["federationId"].ToString();
+            //Debug.Log(federationId);
         }
     }
 #if UNITY_ANDROID
