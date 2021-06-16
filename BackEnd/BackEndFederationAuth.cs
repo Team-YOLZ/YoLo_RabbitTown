@@ -24,9 +24,12 @@ public class BackEndFederationAuth : MonoBehaviour
 
         //GPGS 시작.
         PlayGamesPlatform.Activate();
-#elif UNITY_IOS
-        AppleLogin();
 #endif
+        BackendReturnObject bro = Backend.BMember.LoginWithTheBackendToken();
+        if (bro.IsSuccess())
+        {
+            Managers.Scene.LoadScene(Define.Scene.Main);
+        }
     }
 #if UNITY_ANDROID
     //구글 로그인.
@@ -71,7 +74,7 @@ public class BackEndFederationAuth : MonoBehaviour
         }
     }
 
- 
+    //구글 토큰으로 뒤끝 회원가입 및 로그인.
     public void GPGSLogin()
     {
         BackendReturnObject BRO = Backend.BMember.AuthorizeFederation(GetTokens(), FederationType.Google, "GPGS로 만든 계정.");
@@ -114,12 +117,13 @@ public class BackEndFederationAuth : MonoBehaviour
     {
         BackendReturnObject bro = Backend.BMember.AuthorizeFederation(args.userInfo.idToken, FederationType.Apple, "siwa");
 
-        Debug.Log(args.userInfo.idToken);
+        //Debug.Log(args.userInfo.idToken); <- 애플 로그인 토큰.
 
         if (bro.IsSuccess())
         {
-            Debug.Log("APPLE 로그인 성공");
             //성공 처리
+            Debug.Log("APPLE 로그인 성공");
+            Managers.Scene.LoadScene(Define.Scene.Main);
         }
         else
         {
