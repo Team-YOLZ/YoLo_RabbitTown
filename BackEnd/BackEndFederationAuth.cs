@@ -1,12 +1,27 @@
 using BackEnd;
 using UnityEngine;
+#if UNITY_ANDROID
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
-
+#elif UNITY_IOS
+using UnityEngine.SignInWithApple;
+#endif
 public class BackEndFederationAuth : MonoBehaviour
 {
+    [SerializeField] private GameObject GoogleLoginBtn;
+    [SerializeField] private GameObject AppleLoginBtn;
+    private void Awake()
+    {
+#if UNITY_ANDROID
+        GoogleLoginBtn.SetActive(true);
+#elif UNITY_IOS
+        AppleLoginBtn.SetActive(true);
+#endif
+    }
+
     void Start()
     {
+#if UNITY_ANDROID
         PlayGamesClientConfiguration config = new PlayGamesClientConfiguration
             .Builder()
             .RequestServerAuthCode(false) //뒤끝 파이어베이스 등 구글 토큰 사용하려면 flase로.
@@ -20,13 +35,21 @@ public class BackEndFederationAuth : MonoBehaviour
 
         //GPGS 시작.
         PlayGamesPlatform.Activate();
-        GoogleAuth();
+#endif
+        BackendReturnObject bro = Backend.BMember.LoginWithTheBackendToken();
+        if (bro.IsSuccess())
+        {
+            Managers.Scene.LoadScene(Define.Scene.Main);
+            //BackendReturnObject bro2 = Backend.BMember.GetUserInfo();
+            //string federationId = bro2.GetReturnValuetoJSON()["row"]["federationId"].ToString();
+            //Debug.Log(federationId);
+        }
     }
-
+#if UNITY_ANDROID
     //구글 로그인.
-    private void GoogleAuth()
+    public void OnClickGoogleAuth()
     {
-        if (PlayGamesPlatform.Instance.localUser.authenticated == false)
+        if (PlayGamesPlatform.Instance.localUser.authenticated == false) //구글 콘솔 로그인이 되어 있지 않을 때
         {
             Social.localUser.Authenticate(success =>
             {
@@ -42,6 +65,7 @@ public class BackEndFederationAuth : MonoBehaviour
                 Debug.Log("GoogleId - " + Social.localUser.id);
                 Debug.Log("UserName - " + Social.localUser.userName);
                 Debug.Log("UserName - " + PlayGamesPlatform.Instance.GetUserDisplayName());
+                GPGSLogin();
             });
         }
     }
@@ -55,57 +79,36 @@ public class BackEndFederationAuth : MonoBehaviour
             string _IDToken = PlayGamesPlatform.Instance.GetIdToken();
             //두번째 방법.
             //string _IDToken = ((PlayGamesLocalUser)Social.localUser).GetIdToken();
-
             return _IDToken;
         }
         else
         {
             Debug.Log("접속되어 있지 않습니다. 잠시 후 다시 시도하여 주세요.");
-            GoogleAuth();
             return null;
         }
     }
 
-    //구글 토큰으로 뒤끝서버 로그인하기 - 동기 방식.
-    //public void GPGSLogin()
-    //{
-    //    // 이미 로그인 된 경우
-    //    if (Social.localUser.authenticated == true)
-    //    {
-    //        BackendReturnObject BRO = Backend.BMember.AuthorizeFederation(GetTokens(), FederationType.Google, "gpgs");
-    //    }
-    //    else
-    //    {
-    //        Social.localUser.Authenticate((bool success) => {
-    //            if (success)
-    //            {
-    //                // 로그인 성공 -> 뒤끝 서버에 획득한 구글 토큰으로 가입 요청
-    //                BackendReturnObject BRO = Backend.BMember.AuthorizeFederation(GetTokens(), FederationType.Google, "gpgs");
-    //            }
-    //            else
-    //            {
-    //                // 로그인 실패
-    //                Debug.Log("Login failed for some reason");
-    //            }
-    //        });
-    //    }
-    //}
-
-    public void OnClcikGPGSLogin()
+    //구글 토큰으로 뒤끝 회원가입 및 로그인.
+    public void GPGSLogin()
     {
         BackendReturnObject BRO = Backend.BMember.AuthorizeFederation(GetTokens(), FederationType.Google, "GPGS로 만든 계정.");
         if (BRO.IsSuccess()) //로그인 성공.
         {
-            Debug.Log("구글 토큰으로 뒤끝 서버 로그인 성공.(동기 방식)");
+            switch (BRO.GetStatusCode())
+            {
+                case "200":
+                    Debug.Log("이미 회원가입 완료.");
+                    break;
+                case "201":
+                    Debug.Log("신규 회원가입 완료.");
+                    break;
+            }
+            Managers.Scene.LoadScene(Define.Scene.Main);
         }
         else //로그인 실패.
         {
             switch (BRO.GetStatusCode()) //실패 사유.
             {
-                case "200":
-                    Debug.Log("이미 회원가입 완료.");
-                    break;
-
                 case "403":
                     Debug.Log("차단 유저입니다. 차단 사유 : " + BRO.GetErrorCode());
                     break;
@@ -117,70 +120,31 @@ public class BackEndFederationAuth : MonoBehaviour
         }
     }
 
-    //이미 가입한 회원의 이메일 정보 저장.
-    public void OnClickUpdateEmail()
+#elif UNITY_IOS
+    public void AppleLogin()
     {
-        BackendReturnObject BRO = Backend.BMember.UpdateFederationEmail(GetTokens(), FederationType.Google);
-        if (BRO.IsSuccess())
+        var siwa = gameObject.GetComponent<SignInWithApple>();
+        siwa.Login(OnLogin);
+    }
+
+    public void OnLogin(SignInWithApple.CallbackArgs args)
+    {
+        BackendReturnObject bro = Backend.BMember.AuthorizeFederation(args.userInfo.idToken, FederationType.Apple, "siwa");
+
+        //Debug.Log(args.userInfo.idToken); <- 애플 로그인 토큰.
+
+        if (bro.IsSuccess())
         {
-            Debug.Log("이메일 저장 완료.");
+            //성공 처리
+            Debug.Log("APPLE 로그인 성공");
+            Managers.Scene.LoadScene(Define.Scene.Main);
         }
         else
         {
-            if (BRO.GetStatusCode() == "404") Debug.Log("federation ID를 찾을 수 없습니다.");
+            Debug.LogError("Apple 로그인 실패");
+            Debug.LogError(bro.GetErrorCode());
+            //실패 처리
         }
     }
-
-    //이미 가입한 유저인지 확인 => (이 때 이미 가입한 유저라면 바로 로그인 로직으로 넘어가야 하나 고민중.)
-    public void OnClickCheckUserAuthenticate()
-    {
-        BackendReturnObject BRO = Backend.BMember.CheckUserInBackend(GetTokens(), FederationType.Google);
-        if (BRO.GetStatusCode() == "200")
-        {
-            Debug.Log("가입중인 계정입니다.");
-
-            //해당 계정 정보.
-            Debug.Log(BRO.GetReturnValue());
-        }
-        else
-        {
-            Debug.Log("가입된 계정이 아닙니다.");
-        }
-    }
-
-    //커스텀 계정을 패더레이션 계정으로 변경.
-    public void OnClickChangeCustomToFederation()
-    {
-        BackendReturnObject BRO = Backend.BMember.ChangeCustomToFederation(GetTokens(), FederationType.Google);
-        if (BRO.IsSuccess())
-        {
-            Debug.Log("패더레이션 계정으로 변경 완료.");
-        }
-        else
-        {
-            switch (BRO.GetStatusCode())
-            {
-                case "400":
-                    if (BRO.GetErrorCode() == "BadParameterException")
-                    {
-                        Debug.Log("이미 변경 완료 되었는데 다시 시도한 경우.");
-                    }
-
-                    else if (BRO.GetErrorCode() == "UndefinedParameterException")
-                    {
-                        Debug.Log("커스텀 로그인 하지 않고 시도한 경우.");
-                    }
-                    break;
-
-                case "409":
-                    //이미 가입되어 있는 경우.
-                    Debug.Log("중복된 fedetationId 입니다.");
-                    break;
-
-                default:
-                    Debug.Log("서버 공통 에러 발생. " + BRO.GetMessage());
-                    break;
-            }
-        }
-    }
+#endif
 }
