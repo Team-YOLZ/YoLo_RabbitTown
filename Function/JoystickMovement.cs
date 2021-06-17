@@ -38,6 +38,8 @@ public class JoystickMovement : MonoBehaviour
     Rigidbody player_rb;
     public float _speed;
 
+    Renderer ObstacleRenderer;
+
     void Awake()
     {
         _bigcircle = GetComponent<RectTransform>();
@@ -49,6 +51,24 @@ public class JoystickMovement : MonoBehaviour
         firstposition = _smallcircle.position;
         player_rb = player.GetComponent<Rigidbody>();
         player_anim = player.GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        float Distance = Vector3.Distance(Camera.main.transform.position, player.transform.position);
+        Vector3 Direction = (player.transform.position - Camera.main.transform.position).normalized;
+
+        if (Physics.Raycast(Camera.main.transform.position, Direction, out RaycastHit hit, Distance))
+        {
+            ObstacleRenderer = hit.collider.gameObject.GetComponentInChildren<Renderer>();
+            if (ObstacleRenderer != null)
+            {
+                Material Mat = ObstacleRenderer.material;
+                Color matColor = Mat.color;
+                matColor.a = 0.5f;
+                Mat.color = matColor;
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -78,6 +98,7 @@ public class JoystickMovement : MonoBehaviour
         }        
     }
 
+    #region EventTrigger
     public void PointDown(BaseEventData baseEventData) //조이스틱 터치시 event
     {
         Debug.Log("Joystick_Point down");
@@ -140,4 +161,5 @@ public class JoystickMovement : MonoBehaviour
         player_anim.ResetTrigger("Run");
         player_anim.SetTrigger("Idle");
     }
+    #endregion
 }

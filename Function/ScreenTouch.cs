@@ -12,13 +12,13 @@ public class ScreenTouch : MonoBehaviour
     float CameraArm_Y = 3.5f; //default
 
     //게임씬 입장시 obj_CameraArm zoom out Timeline쓰지 않을 경우 임시 코드
-    [SerializeField] bool EnterGame = true;
-    [SerializeField] Vector3 orgPos;
+    //[SerializeField] bool EnterGame = true;
+    //[SerializeField] Vector3 orgPos;
 
     //게임씬 입장시 obj_CameraArm zoom out Timeline쓰지 않을 경우 임시 코드
     private void Awake()
     {
-        orgPos = new Vector3(obj_CameraArm.localPosition.x , obj_CameraArm.localPosition.y, obj_CameraArm.localPosition.z - 15);
+        //orgPos = new Vector3(obj_CameraArm.localPosition.x , obj_CameraArm.localPosition.y, obj_CameraArm.localPosition.z - 15);
     }
 
     private void LateUpdate()
