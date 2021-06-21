@@ -1,5 +1,6 @@
 using BackEnd;
 using UnityEngine;
+using UnityEngine.UI;
 #if UNITY_ANDROID
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
@@ -10,6 +11,10 @@ public class BackEndFederationAuth : MonoBehaviour
 {
     [SerializeField] private GameObject GoogleLoginBtn;
     [SerializeField] private GameObject AppleLoginBtn;
+    [SerializeField] private GameObject LoginCanvas;
+    [SerializeField] private GameObject TapCanvs;
+    [SerializeField] private InputField InputField_Id; //에디터 환경 위해 임시 커스텀 로그인 환경 아이디필드
+    [SerializeField] private InputField InputField_Pw; 
     private void Awake()
     {
 #if UNITY_ANDROID
@@ -39,7 +44,9 @@ public class BackEndFederationAuth : MonoBehaviour
         BackendReturnObject bro = Backend.BMember.LoginWithTheBackendToken();
         if (bro.IsSuccess())
         {
-            Managers.Scene.LoadScene(Define.Scene.Main);
+            LoginCanvas.SetActive(false);
+            TapCanvs.SetActive(true);
+            //Managers.Scene.LoadScene(Define.Scene.Main);
             //BackendReturnObject bro2 = Backend.BMember.GetUserInfo();
             //string federationId = bro2.GetReturnValuetoJSON()["row"]["federationId"].ToString();
             //Debug.Log(federationId);
@@ -101,9 +108,12 @@ public class BackEndFederationAuth : MonoBehaviour
                     break;
                 case "201":
                     Debug.Log("신규 회원가입 완료.");
+    gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
                     break;
             }
-            Managers.Scene.LoadScene(Define.Scene.Main);
+            //Managers.Scene.LoadScene(Define.Scene.Main);
+            LoginCanvas.SetActive(false);
+            TapCanvs.SetActive(true);
         }
         else //로그인 실패.
         {
@@ -137,7 +147,10 @@ public class BackEndFederationAuth : MonoBehaviour
         {
             //성공 처리
             Debug.Log("APPLE 로그인 성공");
-            Managers.Scene.LoadScene(Define.Scene.Main);
+            //Managers.Scene.LoadScene(Define.Scene.Main);
+            gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
+            LoginCanvas.SetActive(false);
+            TapCanvs.SetActive(true);
         }
         else
         {
@@ -147,4 +160,25 @@ public class BackEndFederationAuth : MonoBehaviour
         }
     }
 #endif
+    //에디터 환경 개발 위한 커스텀 계정 회원가입 및 로그인 기능 (출시 시 삭제 예정)
+    public void OnClickCustomSignUp()
+    {
+        BackendReturnObject bro = Backend.BMember.CustomSignUp(InputField_Id.text, InputField_Pw.text);
+        if (bro.IsSuccess())
+        {
+            Debug.Log("회원가입에 성공했습니다");
+            gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
+        }
+    }
+
+    public void OnClickCutomLogin()
+    {
+        BackendReturnObject bro = Backend.BMember.CustomLogin(InputField_Id.text, InputField_Pw.text);
+        if (bro.IsSuccess())
+        {
+            Debug.Log("로그인에 성공했습니다");
+            LoginCanvas.SetActive(false);
+            TapCanvs.SetActive(true);
+        }
+    }
 }

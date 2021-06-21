@@ -18,13 +18,4 @@ public class TitleScene : BaseScene
         //날려줄 정보들
         Debug.Log("TitleScene Clear");
     }
-
-    private void Update()
-    {
-        //임시로 씬넘겨주는 코드
-        if(Input.GetKeyDown(KeyCode.Q))
-        {
-            Managers.Scene.LoadScene(Define.Scene.Main);
-        }
-    }
 }
