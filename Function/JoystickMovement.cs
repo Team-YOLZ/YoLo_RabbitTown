@@ -30,15 +30,12 @@ public class JoystickMovement : MonoBehaviour
     public GameObject player;
     public Transform obj_CameraArm;
 
-    private static JoystickMovement instance;
-    Vector3 TouchPosition;
+    private static JoystickMovement instance;    
     Vector3 firstposition;
     float circleradius;
     private Animator player_anim;
     Rigidbody player_rb;
-    public float _speed;
-
-    Renderer ObstacleRenderer;
+    public float _speed;    
 
     void Awake()
     {
@@ -51,24 +48,6 @@ public class JoystickMovement : MonoBehaviour
         firstposition = _smallcircle.position;
         player_rb = player.GetComponent<Rigidbody>();
         player_anim = player.GetComponent<Animator>();
-    }
-
-    private void Update()
-    {
-        float Distance = Vector3.Distance(Camera.main.transform.position, player.transform.position);
-        Vector3 Direction = (player.transform.position - Camera.main.transform.position).normalized;
-
-        if (Physics.Raycast(Camera.main.transform.position, Direction, out RaycastHit hit, Distance))
-        {
-            ObstacleRenderer = hit.collider.gameObject.GetComponentInChildren<Renderer>();
-            if (ObstacleRenderer != null)
-            {
-                Material Mat = ObstacleRenderer.material;
-                Color matColor = Mat.color;
-                matColor.a = 0.5f;
-                Mat.color = matColor;
-            }
-        }
     }
 
     private void FixedUpdate()
