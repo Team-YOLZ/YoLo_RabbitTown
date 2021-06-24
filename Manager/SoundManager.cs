@@ -7,7 +7,6 @@ public class SoundManager
     //MP3 player => AudioSource
     //MP3  음원 => AudioClip
     //관객(귀) =>AudioLister
-
     AudioSource[] _audioSources = new AudioSource[(int)Define.Sound.MaxCount];
     Dictionary<string, AudioClip> _audioClips = new Dictionary<string, AudioClip>(); //이펙트음 캐슁역할 위
 
