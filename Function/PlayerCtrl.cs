@@ -23,10 +23,17 @@ public class PlayerCtrl : CreatureCtrl
     }
 
     private static PlayerCtrl instance;
+    public float _speed = 10f;
+    public GameObject obj_player;        
+    public GameObject ObstacleMinHeight;        
+    Animator player_anim;
     Rigidbody rb;
+    public GameObject[] enemy1;
+    [SerializeField] List<Renderer> list_Obstacle = new List<Renderer>(); //플레이어를 가리는 오브젝트의 Renderer
 
-    public bool _enemyInAttackRange; //공격 사거리 내에 적이 있나요?
-    public LayerMask _whatIsEnemy; //enemy 레이어
+
+    public bool _enemyInAttackRange; //怨듦꺽 ш굅由 댁 � ?
+    public LayerMask _whatIsEnemy; //enemy �댁
 
 
     protected override void Init()
@@ -34,7 +41,7 @@ public class PlayerCtrl : CreatureCtrl
         _creature = gameObject;
         _whatIsEnemy = 1 << LayerMask.NameToLayer("Enemy");
 
-        CustomPlayerDBConnection(); //플레이어 능력치
+        CustomPlayerDBConnection(); //�댁 λμ
     }
     protected override void Init2()
     {
@@ -42,7 +49,7 @@ public class PlayerCtrl : CreatureCtrl
         base.Init2();
     }
 
-    protected override void UpdateAnimation() //공격과 죽음만 애니메이션 구현
+    protected override void UpdateAnimation() //怨듦꺽怨 二쎌留 硫댁 援ы
     {
         if (_state == CreatureState.Skill)
         {
@@ -52,6 +59,42 @@ public class PlayerCtrl : CreatureCtrl
         {
             _animator.Play("Die");
         }
+
+        float Dis = Vector3.Distance(Camera.main.transform.position, ObstacleMinHeight.transform.position);
+        Vector3 Dir = (ObstacleMinHeight.transform.position - Camera.main.transform.position).normalized;
+
+        if (Physics.Raycast(Camera.main.transform.position, Dir, out RaycastHit hit, Dis))
+        {
+            if (hit.collider.CompareTag("Obstacle"))
+            {
+                Renderer check = hit.collider.gameObject.GetComponent<Renderer>();
+                if (!list_Obstacle.Contains(check)) list_Obstacle.Add(check);
+
+                ObstacleCollision();
+            }
+            else
+            {
+                if (list_Obstacle.Count != 0) ReleaseAlpha();
+            }
+        }
+    }
+
+    void ObstacleCollision()
+    {
+        foreach (Renderer index in list_Obstacle)
+        {
+            index.material.SetFloat("_Alpha", 0.5f);
+        }
+    }
+
+    void ReleaseAlpha()
+    {
+        foreach (Renderer index in list_Obstacle)
+        {
+            index.material.SetFloat("_Alpha", 1f);
+        }
+
+        list_Obstacle.Clear();
     }
     protected override void UpdateController()
     {
@@ -63,20 +106,20 @@ public class PlayerCtrl : CreatureCtrl
     }
     protected override void UpdateDead()
     {
-       //플레이어 죽었을 때 로직
+       //�댁 二쎌  濡吏
     }
 
     private void CustomPlayerDBConnection()
     {
-        //플레이어 능력치 디비랑 연결 
+        //�댁 λμ 鍮 곌껐 
     }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.black;
-        Gizmos.DrawWireSphere(transform.position, _attackRange); //black : 공격 사거리
+        Gizmos.DrawWireSphere(transform.position, _attackRange); //black : 怨듦꺽 ш굅由
     }
 
 }
 
-//공격사거리 근처에만 있으면 공격. 
+//怨듦꺽ш굅由 洹쇱留 쇰㈃ 怨듦꺽. 
