@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Define;
 
-public class PlayerCtrl : MonoBehaviour
+public class PlayerCtrl : CreatureCtrl 
 {
     public static PlayerCtrl Instance //sigleton
     {
@@ -20,29 +21,62 @@ public class PlayerCtrl : MonoBehaviour
             return instance;
         }
     }
-    private static PlayerCtrl instance;
-    public float _speed = 10f;
-    public GameObject obj_player;        
-    Animator player_anim;
-    Rigidbody rb;
-    public GameObject[] enemy1;
 
-    void Start()
+    private static PlayerCtrl instance;
+    Rigidbody rb;
+
+    public bool _enemyInAttackRange; //공격 사거리 내에 적이 있나요?
+    public LayerMask _whatIsEnemy; //enemy 레이어
+
+
+    protected override void Init()
     {
-        rb = obj_player.GetComponent<Rigidbody>();
-        player_anim = obj_player.GetComponent<Animator>();
-        enemy1 = GameObject.FindGameObjectsWithTag("Enemy1");//�ӽ� ���� �ڵ� ���� Search��.
+        _creature = gameObject;
+        _whatIsEnemy = 1 << LayerMask.NameToLayer("Enemy");
+
+        CustomPlayerDBConnection(); //플레이어 능력치
+    }
+    protected override void Init2()
+    {
+        rb = _creature.GetComponent<Rigidbody>();
+        base.Init2();
     }
 
-    private void Update()
+    protected override void UpdateAnimation() //공격과 죽음만 애니메이션 구현
     {
-        //�ӽ� ���� �ڵ�.
-        if (Input.GetKeyDown(KeyCode.A))
+        if (_state == CreatureState.Skill)
         {
-            for (int i = 0; i < enemy1.Length; i++)
-            {
-                enemy1[i].GetComponent<EnemyCtrl>().TakeDamage(5);
-            }
+            _animator.Play("Attack");
+        }
+        else if(_state == CreatureState.Dead)
+        {
+            _animator.Play("Die");
         }
     }
+    protected override void UpdateController()
+    {
+        _enemyInAttackRange = Physics.CheckSphere(transform.position, _attackRange, _whatIsEnemy);
+
+        if (_enemyInAttackRange)
+            State = CreatureState.Skill;
+        base.UpdateController();
+    }
+    protected override void UpdateDead()
+    {
+       //플레이어 죽었을 때 로직
+    }
+
+    private void CustomPlayerDBConnection()
+    {
+        //플레이어 능력치 디비랑 연결 
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireSphere(transform.position, _attackRange); //black : 공격 사거리
+    }
+
 }
+
+//공격사거리 근처에만 있으면 공격. 
