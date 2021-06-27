@@ -79,6 +79,7 @@ public class EnemyCtrl : CreatureCtrl
         if (distanceToWalkPoint.magnitude < 1f)
             walkPointSet = false;
     }
+
     private void SearchWalkPoint() //순찰 포인트 지정 함수.
     {
         //지정 범위 랜덤 포인트 순찰.
