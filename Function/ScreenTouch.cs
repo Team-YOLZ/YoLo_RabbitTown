@@ -11,12 +11,36 @@ public class ScreenTouch : MonoBehaviour
     public float dragSpeed = 1f;
     float CameraArm_Y = 3.5f; //default
 
-    private void FixedUpdate()
+    //게임씬 입장시 obj_CameraArm zoom out Timeline쓰지 않을 경우 임시 코드
+    //[SerializeField] bool EnterGame = true;
+    //[SerializeField] Vector3 orgPos;
+
+    //게임씬 입장시 obj_CameraArm zoom out Timeline쓰지 않을 경우 임시 코드
+    private void Awake()
+    {
+        //orgPos = new Vector3(obj_CameraArm.localPosition.x , obj_CameraArm.localPosition.y, obj_CameraArm.localPosition.z - 15);
+    }
+
+    private void LateUpdate()
     {        
         //rotation 범위, default = player.y + 3.5f;
         if (CameraArm_Y < 3.5f) CameraArm_Y = 3.5f;
         if (CameraArm_Y > 20f) CameraArm_Y = 20f;
 
+        /* //게임씬 입장시 obj_CameraArm zoom out Timeline쓰지 않을 경우 임시 코드
+        if (EnterGame)
+        {
+            Vector3 cameraArmPosition = obj_CameraArm.localPosition;
+            if ((orgPos - obj_CameraArm.position).sqrMagnitude <= 1f) obj_CameraArm.localPosition = orgPos;
+            else obj_CameraArm.localPosition = Vector3.Lerp(cameraArmPosition, orgPos, 0.1f);
+
+            if (cameraArmPosition == orgPos) EnterGame = false;
+        }
+        else
+        {
+            obj_CameraArm.position = new Vector3(obj_player.position.x, obj_player.position.y + CameraArm_Y, obj_player.position.z);
+        }
+        */
         obj_CameraArm.position = new Vector3(obj_player.position.x, obj_player.position.y + CameraArm_Y, obj_player.position.z);
     }
 
