@@ -1,17 +1,13 @@
 using UnityEngine;
 using UnityEngine.AI;
+using static Define;
 
-public class EnemyCtrl : MonoBehaviour
+public class EnemyCtrl : CreatureCtrl
 {
-    public NavMeshAgent agent;
-
-    public Transform player;
-    public Vector3 Mine;// 자신 위치.
-
-    public LayerMask whatIsGround, whatIsPlayer;
-
-    public float Maxhealth; //전체 피통.
-    public float health; //현재 피통.
+    private NavMeshAgent _agent;
+    private Transform _player;
+    private Vector3 Mine;// 자신 위치.
+    private LayerMask _whatIsGround, _whatIsPlayer;
 
     //순찰.
     public Vector3 walkPoint;
@@ -19,9 +15,8 @@ public class EnemyCtrl : MonoBehaviour
     public float walkPointRange;
 
     //공격.
-    public float timeBetweenAttacks;
-    bool alreadyAttacked;
-    public GameObject projectile; //원거리 공격 적 위
+    //bool alreadyAttacked;
+    //public GameObject projectile; //원거리 공격 적 위
 
     //State
     public float sightRange; //순찰범위
@@ -29,32 +24,54 @@ public class EnemyCtrl : MonoBehaviour
     public bool playerInSightRange; //아마 불값 다른코드에서 가져다 쓸 것 같아서 public
     public bool playerInAttackRange;
 
-
-    private void Awake()
+    protected override void Init()
     {
-        player = GameObject.Find("player").transform;
+        base.Init();
+        _agent = GetComponent<NavMeshAgent>();
+        _player = GameObject.Find("player").transform;
         Mine = transform.position;
-        agent = GetComponent<NavMeshAgent>();
-        health = Maxhealth;
+        _whatIsGround = 1 << LayerMask.NameToLayer("Ground");
+        _whatIsPlayer = (1 << LayerMask.NameToLayer("Player")) + (1 << LayerMask.NameToLayer("Ally"));
+
+    }
+    protected override void Init2()
+    {
+        base.Init2();
+        _creature.tag = "Enemy";
+        _creature.layer = LayerMask.NameToLayer("Enemy");
+
+        //공격 사거리 NavMeshAgent의 stoppingDistance에 적용
+        _agent.stoppingDistance = _attackRange;
     }
 
-    private void Update()
+    protected override void UpdateController()
     {
         //Check 순찰범위,공격범위에 따른 State Change
-        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, whatIsPlayer);
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
-
+        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, _whatIsPlayer);
+        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, _whatIsPlayer);
         if (!playerInSightRange && !playerInAttackRange) Patroling(); //순찰범위,공격범위 벗어나있을 때
         if (playerInSightRange && !playerInAttackRange) ChasePlayer(); //순찰범위엔 포함 공격범위엔 벗어나있을 때
-        if (playerInAttackRange && playerInSightRange) AttackPlayer(); //순찰범위,공격범위 모두 포함되어있을 때
+        if (playerInAttackRange && playerInSightRange) State= CreatureState.Skill; //순찰범위,공격범위 모두 포함되어있을 때
+    
+        base.UpdateController();
+    }
+    protected override void UpdateSkill()
+    {
+        _agent.SetDestination(transform.position);
+        base.UpdateSkill();
+    }
+    protected override void UpdateDead()
+    {
+        //죽었을 때 로직 (코인, 전리품, 동료로 변환..)
     }
 
     private void Patroling() //순찰 코드
     {
+        State = CreatureState.Moving;
         if (!walkPointSet) SearchWalkPoint();
 
         if (walkPointSet)
-            agent.SetDestination(walkPoint);
+            _agent.SetDestination(walkPoint);
 
         Vector3 distanceToWalkPoint = transform.position - walkPoint;
 
@@ -67,51 +84,25 @@ public class EnemyCtrl : MonoBehaviour
         //지정 범위 랜덤 포인트 순찰.
         float randomZ = Random.Range(-walkPointRange, walkPointRange); //랜덤범위(-지정 범위 ~ 지정범위) z축.
         float randomX = Random.Range(-walkPointRange, walkPointRange); //랜덤범위(-지정 범위 ~ 지정범위) x축.
-
         walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
-        if (Physics.Raycast(walkPoint, -transform.up, 2f, whatIsGround))
+        if (Physics.Raycast(walkPoint, -transform.up, 2f, _whatIsGround))
             walkPointSet = true;
     }
 
     private void ChasePlayer() //추격함수.
     {
-        agent.SetDestination(player.position);
+        State = CreatureState.Moving;
+        GameObject go = FindNearestObjectByTag("Team");
+        _agent.SetDestination(go.transform.position);
+        
     }
 
-    private void AttackPlayer() //공격함수.
-    {
-        //nevmesh set destination을 player로.
-        agent.SetDestination(transform.position);
-
-        //transform.LookAt(player,Vector3.up);//y포스는 고정할지 고민중. Rotation 코드.
-
-        if (!alreadyAttacked)
-        {
-            //공격코드 (원거리,근거리 등등 여기서 적 구분해서 지정할 예정.)
-
-            //공격코드 끝.
-
-            alreadyAttacked = true;
-            Invoke(nameof(ResetAttack), timeBetweenAttacks); //공격 사이의 설정(공격 딜레이 혹은 효과 넣으면 되)
-        }
-    }
-    private void ResetAttack()
-    {
-        alreadyAttacked = false;
-    }
-
-    public void TakeDamage(int damage)
-    {
-        health -= damage;
-
-        if (health <= 0) Invoke(nameof(DeactiveDelay), 0.5f); //Death Animation 실행위해.
-    }
     //object Pooler Control
     private void OnEnable()//활성화시 객체 초기화 로직.
     {
         gameObject.transform.position = Mine;
-        health = Maxhealth;
+        _currentHp = _hp;
     }
     private void OnDisable()
     {
@@ -123,11 +114,11 @@ public class EnemyCtrl : MonoBehaviour
     private void DeactiveDelay() => gameObject.SetActive(false);
     private void ReSpawn() => gameObject.SetActive(true); //Respawn
 
-    private void OnDrawGizmosSelected() //공격 범위 순찰 범위 영역 보기 위해.
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, sightRange);
-    }
+    //private void OnDrawGizmosSelected() //공격 범위 순찰 범위 영역 보기 위해.
+    //{
+    //    Gizmos.color = Color.red;
+    //    Gizmos.DrawWireSphere(transform.position, attackRange);
+    //    Gizmos.color = Color.yellow;
+    //    Gizmos.DrawWireSphere(transform.position, sightRange);
+    //}
 }
