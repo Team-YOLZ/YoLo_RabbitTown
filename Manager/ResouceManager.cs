@@ -6,6 +6,17 @@ public class ResourceManager
 {
     public T Load<T>(string path) where T : Object //조건 T 는 오브젝트
     {
+        if(typeof(T) == typeof(GameObject)) //이러한 경우 프리팹일 경우가 크다.
+        {
+            string name = path;
+            int index = name.LastIndexOf('/');
+            if (index >= 0)
+                name = name.Substring(index + 1);
+
+            GameObject go = Managers.Pool.GetOriginal(name);
+            if (go != null)
+                return go as T;
+        }
         return Resources.Load<T>(path); //리소스 로드하면 우리의 리소스 로드문을 써라
     }
 
@@ -18,6 +29,29 @@ public class ResourceManager
             Debug.Log($"Failed To Load Prefab : {path}"); //디버그문 출력
             return null;
         }
-        return Object.Instantiate(original, parent);
+
+        //2. 혹시 폴링된 애가 있나?
+        if (original.GetComponent<Poolable>() != null)
+            return Managers.Pool.Pop(original, parent).gameObject;
+
+        GameObject go = Object.Instantiate(original, parent);
+        go.name = original.name;
+        return go;
+    }
+
+    public void Destroy(GameObject go)
+    {
+        if (go == null)
+            return;
+
+        //풀링된 애라면 푸쉬
+        Poolable poolable = go.GetComponent<Poolable>();
+        if(poolable != null)
+        {
+            Managers.Pool.Push(poolable);
+            return;
+        }
+
+        Object.Destroy(go);
     }
 }

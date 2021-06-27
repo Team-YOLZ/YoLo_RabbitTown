@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Define;
 
-public class PlayerCtrl : MonoBehaviour
+public class PlayerCtrl : CreatureCtrl 
 {
     public static PlayerCtrl Instance //sigleton
     {
@@ -20,6 +21,7 @@ public class PlayerCtrl : MonoBehaviour
             return instance;
         }
     }
+
     private static PlayerCtrl instance;
     public float _speed = 10f;
     public GameObject obj_player;        
@@ -27,24 +29,35 @@ public class PlayerCtrl : MonoBehaviour
     Animator player_anim;
     Rigidbody rb;
     public GameObject[] enemy1;
-    [SerializeField] List<Renderer> list_Obstacle = new List<Renderer>(); //�÷��̾ ������ ������Ʈ�� Renderer
+    [SerializeField] List<Renderer> list_Obstacle = new List<Renderer>(); //플레이어를 가리는 오브젝트의 Renderer
 
-    void Start()
+
+    public bool _enemyInAttackRange; //怨듦꺽 ш굅由 댁 � ?
+    public LayerMask _whatIsEnemy; //enemy �댁
+
+
+    protected override void Init()
     {
-        rb = obj_player.GetComponent<Rigidbody>();
-        player_anim = obj_player.GetComponent<Animator>();
-        enemy1 = GameObject.FindGameObjectsWithTag("Enemy1");//�ӽ� ���� �ڵ� ���� Search��.
+        _creature = gameObject;
+        _whatIsEnemy = 1 << LayerMask.NameToLayer("Enemy");
+
+        CustomPlayerDBConnection(); //�댁 λμ
+    }
+    protected override void Init2()
+    {
+        rb = _creature.GetComponent<Rigidbody>();
+        base.Init2();
     }
 
-    private void Update()
+    protected override void UpdateAnimation() //怨듦꺽怨 二쎌留 硫댁 援ы
     {
-        //�ӽ� ���� �ڵ�.
-        if (Input.GetKeyDown(KeyCode.A))
+        if (_state == CreatureState.Skill)
         {
-            for (int i = 0; i < enemy1.Length; i++)
-            {
-                enemy1[i].GetComponent<EnemyCtrl>().TakeDamage(5);
-            }
+            _animator.Play("Attack");
+        }
+        else if(_state == CreatureState.Dead)
+        {
+            _animator.Play("Die");
         }
 
         float Dis = Vector3.Distance(Camera.main.transform.position, ObstacleMinHeight.transform.position);
@@ -83,4 +96,30 @@ public class PlayerCtrl : MonoBehaviour
 
         list_Obstacle.Clear();
     }
+    protected override void UpdateController()
+    {
+        _enemyInAttackRange = Physics.CheckSphere(transform.position, _attackRange, _whatIsEnemy);
+
+        if (_enemyInAttackRange)
+            State = CreatureState.Skill;
+        base.UpdateController();
+    }
+    protected override void UpdateDead()
+    {
+       //�댁 二쎌  濡吏
+    }
+
+    private void CustomPlayerDBConnection()
+    {
+        //�댁 λμ 鍮 곌껐 
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireSphere(transform.position, _attackRange); //black : 怨듦꺽 ш굅由
+    }
+
 }
+
+//怨듦꺽ш굅由 洹쇱留 쇰㈃ 怨듦꺽. 
