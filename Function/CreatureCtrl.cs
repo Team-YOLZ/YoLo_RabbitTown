@@ -13,7 +13,7 @@ public class CreatureCtrl : MonoBehaviour
     protected float _speed; //이동속도
     protected float _atk = 1; //공격력
     protected float _atkSpeed = 1; //공격속도
-    protected int _attackRange = 10;//공격사거리 <-agent. stopping distance
+    protected int _attackRange = 4;//공격사거리 <-agent. stopping distance
     public bool _rangeAttacktype = false; //근거리(false) or 원거리(true)
 
     [SerializeField] protected int _level = 1; //유닛의 레벨
