@@ -24,6 +24,12 @@ public class EnemyCtrl : CreatureCtrl
     public bool playerInSightRange; //아마 불값 다른코드에서 가져다 쓸 것 같아서 public
     public bool playerInAttackRange;
 
+    [SerializeField] protected int _level = 1; //유닛의 레벨
+    [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
+    [SerializeField] protected int _dropcoin; //죽으면 주는 돈.
+    [SerializeField] protected int _spoilnumber; //죽으면 주는 전리품 넘버.
+    public UnitData unitData;
+
     protected override void Init()
     {
         base.Init();
@@ -32,7 +38,6 @@ public class EnemyCtrl : CreatureCtrl
         Mine = transform.position;
         _whatIsGround = 1 << LayerMask.NameToLayer("Ground");
         _whatIsPlayer = (1 << LayerMask.NameToLayer("Player")) + (1 << LayerMask.NameToLayer("Ally"));
-
     }
     protected override void Init2()
     {
@@ -46,13 +51,15 @@ public class EnemyCtrl : CreatureCtrl
 
     protected override void UpdateController()
     {
-        //Check 순찰범위,공격범위에 따른 State Change
-        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, _whatIsPlayer);
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, _whatIsPlayer);
-        if (!playerInSightRange && !playerInAttackRange) Patroling(); //순찰범위,공격범위 벗어나있을 때
-        if (playerInSightRange && !playerInAttackRange) ChasePlayer(); //순찰범위엔 포함 공격범위엔 벗어나있을 때
-        if (playerInAttackRange && playerInSightRange) State= CreatureState.Skill; //순찰범위,공격범위 모두 포함되어있을 때
-    
+        if (State != CreatureState.Dead)
+        {
+            //Check 순찰범위,공격범위에 따른 State Change
+            playerInSightRange = Physics.CheckSphere(transform.position, sightRange, _whatIsPlayer);
+            playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, _whatIsPlayer);
+            if (!playerInSightRange && !playerInAttackRange) Patroling(); //순찰범위,공격범위 벗어나있을 때
+            if (playerInSightRange && !playerInAttackRange) ChasePlayer(); //순찰범위엔 포함 공격범위엔 벗어나있을 때
+            if (playerInAttackRange && playerInSightRange) State = CreatureState.Skill; //순찰범위,공격범위 모두 포함되어있을 때
+        }
         base.UpdateController();
     }
     protected override void UpdateSkill()
@@ -63,6 +70,19 @@ public class EnemyCtrl : CreatureCtrl
     protected override void UpdateDead()
     {
         //죽었을 때 로직 (코인, 전리품, 동료로 변환..)
+        //_animator.SetTrigger("Dead");
+        gameObject.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f);
+    }
+
+    protected override void DefaultStatDBConnection() //초기 스탯 할당.
+    {
+        _atk = unitData.Level[0].Attack;
+        _atkSpeed = unitData.Level[0].AttackSpeed;
+        _speed = unitData.Level[0].MovingSpeed;
+        _hp = unitData.Level[0].Hp;
+        _attackRange = unitData.Level[0].range;
+        _dropcoin = unitData.Level[0].DropCoin;
+        _spoilnumber = unitData.Level[0].Spoilnumber;
     }
 
     private void Patroling() //순찰 코드
@@ -96,7 +116,6 @@ public class EnemyCtrl : CreatureCtrl
         State = CreatureState.Moving;
         GameObject go = FindNearestObjectByTag("Team");
         _agent.SetDestination(go.transform.position);
-        
     }
 
     //object Pooler Control

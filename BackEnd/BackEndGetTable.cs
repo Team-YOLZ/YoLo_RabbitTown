@@ -64,7 +64,6 @@ public class BackEndGetTable : MonoBehaviour
         {
             OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
         }
-
         string[] select = { "Attack", "AttackSpeed", "MovingSpeed", "Hp", "Leadership", "Appeal" };
 
         // 테이블 내 해당 rowIndate를 지닌 row를 조회
@@ -99,7 +98,6 @@ public class BackEndGetTable : MonoBehaviour
         {
             OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
         }
-
         string[] select = { "Coin", "Spoil1", "Spoil2", "Spoil3", "Spoil4" };
 
         // 테이블 내 해당 rowIndate를 지닌 row를 조회

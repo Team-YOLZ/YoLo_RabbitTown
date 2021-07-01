@@ -1,0 +1,25 @@
+using UnityEngine;
+using System;
+using static Define;
+
+[CreateAssetMenu]
+public class UnitData : ScriptableObject
+{
+    public GameObject UnitPrefab;
+    public GameObject Projecttile;
+    public Level_UnitStat[] Level;
+
+    [Serializable]
+    public struct Level_UnitStat
+    {
+        public MeadowUnit meadowUnit;
+        public int Attack;  // 공격력
+        public int AttackSpeed;    // 공격속도
+        public int MovingSpeed; //이동속도
+        public int Hp; //체력
+        public int Level; //레벨
+        public int range;   // 사거리
+        public int DropCoin;    //죽으면 죽는 돈.
+        public int Spoilnumber; // 죽으면 주는 전리품 넘버.
+    }
+}

@@ -41,13 +41,9 @@ public class MainScene : BaseScene
         Debug.Log("MainScene Clear");
     }
 
-    private void Update()
+    public void OnClickGoGameScene()
     {
-        //임시로 씬넘겨주는 코드
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            Managers.Scene.LoadScene(Define.Scene.Game);
-        }
+        Managers.Scene.LoadScene(Define.Scene.Game);
     }
 
     public void EditPage()

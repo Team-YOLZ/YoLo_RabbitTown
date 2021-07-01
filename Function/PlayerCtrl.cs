@@ -30,17 +30,24 @@ public class PlayerCtrl : CreatureCtrl
 
     public GameObject ObstacleMinHeight;
     [SerializeField] List<Renderer> list_Obstacle = new List<Renderer>(); //플레이어를 가리는 오브젝트의 Renderer
+    BackEndGetTable GetPlayerStatData;
+
+    private int _leadership;
+    private int _appeal;
+    new private int _attackRange = 4;
 
     protected override void Init()
     {
         _creature = gameObject;
         _whatIsEnemy = 1 << LayerMask.NameToLayer("Enemy");
 
-        CustomPlayerDBConnection(); //플레이어 능력치
+        GetPlayerStatData = GameObject.Find("UserTableInformation").GetComponent<BackEndGetTable>();
+        DefaultStatDBConnection(); //플레이어 능력치 적용.
     }
+
     protected override void Init2()
     {
-        rb = _creature.GetComponent<Rigidbody>();
+        rb = _creature.GetComponent<Rigidbody>(); 
         base.Init2();
     }
 
@@ -50,11 +57,12 @@ public class PlayerCtrl : CreatureCtrl
         {
             _animator.Play("Attack");
         }
-        else if(_state == CreatureState.Dead)
+        else if (_state == CreatureState.Dead)
         {
             _animator.Play("Die");
         }
     }
+
     protected override void UpdateController()
     {
         _enemyInAttackRange = Physics.CheckSphere(transform.position, _attackRange, _whatIsEnemy);
@@ -81,14 +89,21 @@ public class PlayerCtrl : CreatureCtrl
             }
         }
     }
+
     protected override void UpdateDead()
     {
        //플레이어 죽었을 때 로직
     }
 
-    private void CustomPlayerDBConnection()
+    protected override void DefaultStatDBConnection()
     {
-        //플레이어 능력치 디비랑 연결 
+        //플레이어 능력치 디비랑 연결
+        _atk = GetPlayerStatData.playerStat.Attack;
+        _atkSpeed = GetPlayerStatData.playerStat.AttackSpeed;
+        _speed = GetPlayerStatData.playerStat.MovingSpeed;
+        _hp = GetPlayerStatData.playerStat.Hp;
+        _leadership = GetPlayerStatData.playerStat.Leadership;
+        _appeal = GetPlayerStatData.playerStat.Appeal;
     }
 
     private void OnDrawGizmosSelected()
