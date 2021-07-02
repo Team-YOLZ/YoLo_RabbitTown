@@ -21,5 +21,6 @@ public class UnitData : ScriptableObject
         public int range;   // 사거리
         public int DropCoin;    //죽으면 죽는 돈.
         public int Spoilnumber; // 죽으면 주는 전리품 넘버.
+        public int CanCapturePercent; //죽었을 시 포획 가능 확률.
     }
 }

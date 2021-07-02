@@ -141,9 +141,10 @@ public class CreatureCtrl : MonoBehaviour
 
         // 피격 판정
         if (_creature.CompareTag("Team"))
+        {
             go = FindNearestObjectByTag("Enemy");
-        else
-            go = FindNearestObjectByTag("Team");
+        }
+        else go = FindNearestObjectByTag("Team");
 
         if (go != null)
         {

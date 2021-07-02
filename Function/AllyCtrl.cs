@@ -42,6 +42,7 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
 
         //공격 사거리 NavMeshAgent의 stoppingDistance에 적용
         _agent.stoppingDistance = _attackRange;
+        _agent.speed = _speed;
         //AbilityByLevel();
     }
 

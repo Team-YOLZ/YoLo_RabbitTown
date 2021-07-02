@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
+using System.Collections.Generic;
 using static Define;
 
 public class EnemyCtrl : CreatureCtrl
@@ -25,10 +27,12 @@ public class EnemyCtrl : CreatureCtrl
     public bool playerInAttackRange;
 
     [SerializeField] protected int _level = 1; //유닛의 레벨
+    [SerializeField] protected int _canCapturePercent; //유닛 포획 확률.
     [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
     [SerializeField] protected int _dropcoin; //죽으면 주는 돈.
     [SerializeField] protected int _spoilnumber; //죽으면 주는 전리품 넘버.
     public UnitData unitData;
+    BackEndGetTable GetPlayerStatData;
 
     protected override void Init()
     {
@@ -47,6 +51,9 @@ public class EnemyCtrl : CreatureCtrl
 
         //공격 사거리 NavMeshAgent의 stoppingDistance에 적용
         _agent.stoppingDistance = _attackRange;
+        _agent.speed = _speed;
+
+        GetPlayerStatData = GameObject.Find("UserTableInformation").GetComponent<BackEndGetTable>();
     }
 
     protected override void UpdateController()
@@ -61,6 +68,9 @@ public class EnemyCtrl : CreatureCtrl
             if (playerInAttackRange && playerInSightRange) State = CreatureState.Skill; //순찰범위,공격범위 모두 포함되어있을 때
         }
         base.UpdateController();
+        //renderer.material.SetFloat("Alpha", 0.5f);
+        //Color color = renderer.material.color;
+        //color.a = 0.4f;
     }
     protected override void UpdateSkill()
     {
@@ -83,6 +93,28 @@ public class EnemyCtrl : CreatureCtrl
         _attackRange = unitData.Level[0].range;
         _dropcoin = unitData.Level[0].DropCoin;
         _spoilnumber = unitData.Level[0].Spoilnumber;
+        _canCapturePercent = unitData.Level[0].CanCapturePercent;
+    }
+
+    public void RandomCapture()
+    {
+        int Percent = GetPlayerStatData.playerStat.Appeal + _canCapturePercent;
+        Debug.Log(Percent);
+        int RandomPercent = Random.Range(0, 100);
+        Debug.Log(RandomPercent);
+        if(RandomPercent<=Percent) // 포획가능
+        {
+            Debug.Log("포획 가능");
+            gameObject.tag = "Enemy1";
+            gameObject.layer = LayerMask.NameToLayer("Neutrality");
+        }
+        else //포획불가능
+        {
+            Debug.Log("포획 불가능");
+            gameObject.tag = "Enemy1";
+            gameObject.layer = LayerMask.NameToLayer("Neutrality");
+            //StartCoroutine(BackPool());
+        }
     }
 
     private void Patroling() //순찰 코드
@@ -140,5 +172,27 @@ public class EnemyCtrl : CreatureCtrl
     //    Gizmos.DrawWireSphere(transform.position, attackRange);
     //    Gizmos.color = Color.yellow;
     //    Gizmos.DrawWireSphere(transform.position, sightRange);
+    //}
+
+    private IEnumerator BackPool()
+    {
+        yield return new WaitForSeconds(5f);
+        gameObject.SetActive(false);
+    }
+    //private IEnumerator HitAlphaAnimation()
+    //{
+        ////현재 적의 색상.
+        //Color color = renderer.color;
+
+        ////적의 투명도 40퍼센트.
+        //color.a = 0.4f;
+        //renderer.color = color;
+
+        ////0.05초 대기
+        //yield return new WaitForSeconds(0.05f);
+
+        ////적의 투명도 100프로 설정.
+        //color.a = 1.0f;
+        //renderer.color = color;
     //}
 }
