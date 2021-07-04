@@ -34,7 +34,7 @@ public class PlayerCtrl : CreatureCtrl
 
     private int _leadership;
     private int _appeal;
-    new private int _attackRange = 4;
+    //new private int _attackRange = 4;
 
     protected override void Init()
     {

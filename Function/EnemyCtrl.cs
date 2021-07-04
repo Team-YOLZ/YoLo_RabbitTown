@@ -33,6 +33,7 @@ public class EnemyCtrl : CreatureCtrl
     [SerializeField] protected int _spoilnumber; //죽으면 주는 전리품 넘버.
     public UnitData unitData;
     BackEndGetTable GetPlayerStatData;
+    public Renderer render;
 
     protected override void Init()
     {
@@ -72,16 +73,31 @@ public class EnemyCtrl : CreatureCtrl
         //Color color = renderer.material.color;
         //color.a = 0.4f;
     }
+
     protected override void UpdateSkill()
     {
         _agent.SetDestination(transform.position);
         base.UpdateSkill();
     }
+
     protected override void UpdateDead()
     {
         //죽었을 때 로직 (코인, 전리품, 동료로 변환..)
-        //_animator.SetTrigger("Dead");
-        gameObject.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f);
+        Collider[] cols = Physics.OverlapSphere(gameObject.transform.position, 3);
+        foreach (Collider col in cols)
+        {
+            if (col.gameObject.layer == LayerMask.NameToLayer("Player")&& gameObject.layer== LayerMask.NameToLayer("Neutrality"))
+            {
+                Debug.Log("touch");
+                render.material.SetFloat("_OutlineWidth", 1.15f);
+                //이때 포획,전리품 획득 버튼 뜨게 할 예정.
+
+            }
+            else
+            {
+                render.material.SetFloat("_OutlineWidth", 1.0f);
+            }
+        }
     }
 
     protected override void DefaultStatDBConnection() //초기 스탯 할당.
@@ -98,11 +114,14 @@ public class EnemyCtrl : CreatureCtrl
 
     public void RandomCapture()
     {
+        gameObject.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f);
+        Debug.Log("dead");
         int Percent = GetPlayerStatData.playerStat.Appeal + _canCapturePercent;
         Debug.Log(Percent);
         int RandomPercent = Random.Range(0, 100);
         Debug.Log(RandomPercent);
-        if(RandomPercent<=Percent) // 포획가능
+        render.material.SetFloat("_Outline", 0.3f);
+        if (RandomPercent <= Percent) // 포획가능
         {
             Debug.Log("포획 가능");
             gameObject.tag = "Enemy1";
@@ -113,6 +132,7 @@ public class EnemyCtrl : CreatureCtrl
             Debug.Log("포획 불가능");
             gameObject.tag = "Enemy1";
             gameObject.layer = LayerMask.NameToLayer("Neutrality");
+            //알파값 두번 깜빡 거린 후 Pool로 돌아갈 예정.
             //StartCoroutine(BackPool());
         }
     }
@@ -160,7 +180,7 @@ public class EnemyCtrl : CreatureCtrl
     {
         //ObjectPooler.ReturnToPool(gameObject);
         CancelInvoke();
-        Invoke(nameof(ReSpawn),5f);
+        Invoke(nameof(ReSpawn), 5f);
     }
 
     private void DeactiveDelay() => gameObject.SetActive(false);
@@ -181,18 +201,18 @@ public class EnemyCtrl : CreatureCtrl
     }
     //private IEnumerator HitAlphaAnimation()
     //{
-        ////현재 적의 색상.
-        //Color color = renderer.color;
+    ////현재 적의 색상.
+    //Color color = renderer.color;
 
-        ////적의 투명도 40퍼센트.
-        //color.a = 0.4f;
-        //renderer.color = color;
+    ////적의 투명도 40퍼센트.
+    //color.a = 0.4f;
+    //renderer.color = color;
 
-        ////0.05초 대기
-        //yield return new WaitForSeconds(0.05f);
+    ////0.05초 대기
+    //yield return new WaitForSeconds(0.05f);
 
-        ////적의 투명도 100프로 설정.
-        //color.a = 1.0f;
-        //renderer.color = color;
+    ////적의 투명도 100프로 설정.
+    //color.a = 1.0f;
+    //renderer.color = color;
     //}
 }
