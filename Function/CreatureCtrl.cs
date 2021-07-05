@@ -27,6 +27,8 @@ public class CreatureCtrl : MonoBehaviour
     [SerializeField] protected float _currentHp;  //현재 체력
     [SerializeField] private BoxCollider boxCollider;
 
+    //Creature 공통 정보.
+    public Renderer render;
     //공격
     Coroutine _coSkill;
 
@@ -61,10 +63,10 @@ public class CreatureCtrl : MonoBehaviour
     protected virtual void Init() //초기화 부분(Awake)
     {
         _creature = gameObject;
-        DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
     }
     protected virtual void Init2() //초기화 부분 (Start)
     {
+        DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
         _animator = _creature.GetComponent<Animator>();
         _currentHp = _hp;
     }

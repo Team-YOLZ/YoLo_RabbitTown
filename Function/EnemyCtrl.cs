@@ -3,11 +3,14 @@ using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 using static Define;
+using System.Reflection;
 
 public class EnemyCtrl : CreatureCtrl
 {
     private NavMeshAgent _agent;
-    private Transform _player;
+    private Transform _playertr;
+    public GameObject player;
+    private PlayerCtrl PlayerCtrl;
     private Vector3 Mine;// 자신 위치.
     private LayerMask _whatIsGround, _whatIsPlayer;
 
@@ -31,15 +34,15 @@ public class EnemyCtrl : CreatureCtrl
     [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
     [SerializeField] protected int _dropcoin; //죽으면 주는 돈.
     [SerializeField] protected int _spoilnumber; //죽으면 주는 전리품 넘버.
+    [SerializeField] protected string _enemyname; //Enemy Name
     public UnitData unitData;
     BackEndGetTable GetPlayerStatData;
-    public Renderer render;
 
     protected override void Init()
     {
         base.Init();
         _agent = GetComponent<NavMeshAgent>();
-        _player = GameObject.Find("player").transform;
+        _playertr = GameObject.Find("player").transform;
         Mine = transform.position;
         _whatIsGround = 1 << LayerMask.NameToLayer("Ground");
         _whatIsPlayer = (1 << LayerMask.NameToLayer("Player")) + (1 << LayerMask.NameToLayer("Ally"));
@@ -55,6 +58,8 @@ public class EnemyCtrl : CreatureCtrl
         _agent.speed = _speed;
 
         GetPlayerStatData = GameObject.Find("UserTableInformation").GetComponent<BackEndGetTable>();
+        PlayerCtrl = player.GetComponent<PlayerCtrl>();
+        render = gameObject.GetComponentInChildren<Renderer>();
     }
 
     protected override void UpdateController()
@@ -91,11 +96,21 @@ public class EnemyCtrl : CreatureCtrl
                 Debug.Log("touch");
                 render.material.SetFloat("_OutlineWidth", 1.15f);
                 //이때 포획,전리품 획득 버튼 뜨게 할 예정.
+                if (!PlayerCtrl._captureButton.activeSelf)
+                {
+                    PlayerCtrl.OnCaptureButton(); //capture 버튼 On
+                    PlayerCtrl.OnGetSpoilButton(); //Spoil 버튼 On
+                }
 
             }
             else
             {
                 render.material.SetFloat("_OutlineWidth", 1.0f);
+                if (PlayerCtrl._captureButton.activeSelf)
+                {
+                    PlayerCtrl.OffCaptureButton(); //capture 버튼 Off
+                    PlayerCtrl.OffGetSpoilButton(); //Spoil 버튼 Off
+                }
             }
         }
     }
@@ -110,17 +125,19 @@ public class EnemyCtrl : CreatureCtrl
         _dropcoin = unitData.Level[0].DropCoin;
         _spoilnumber = unitData.Level[0].Spoilnumber;
         _canCapturePercent = unitData.Level[0].CanCapturePercent;
+        _enemyname = unitData.Level[0].Name;
     }
 
-    public void RandomCapture()
+    public void RandomCapture() //적 죽었을때 포획 or go pool ,  Coin 획득 , KillCount 증가.
     {
         gameObject.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f);
-        Debug.Log("dead");
-        int Percent = GetPlayerStatData.playerStat.Appeal + _canCapturePercent;
-        Debug.Log(Percent);
+        GetPlayerStatData.playerAsset.Coin += _dropcoin; //코인 획득.
+ 
+        //여기에 킬카운트 증가 예정.
+
         int RandomPercent = Random.Range(0, 100);
-        Debug.Log(RandomPercent);
-        render.material.SetFloat("_Outline", 0.3f);
+        int Percent = GetPlayerStatData.playerStat.Appeal + _canCapturePercent; //기존 몬스터 포획 확률 + 플레이어 매력수치 = 포획 확률
+        //render.material.SetFloat("_Outline", 0.3f);
         if (RandomPercent <= Percent) // 포획가능
         {
             Debug.Log("포획 가능");
@@ -133,7 +150,7 @@ public class EnemyCtrl : CreatureCtrl
             gameObject.tag = "Enemy1";
             gameObject.layer = LayerMask.NameToLayer("Neutrality");
             //알파값 두번 깜빡 거린 후 Pool로 돌아갈 예정.
-            //StartCoroutine(BackPool());
+            StartCoroutine(BackPool());
         }
     }
 
@@ -197,7 +214,8 @@ public class EnemyCtrl : CreatureCtrl
     private IEnumerator BackPool()
     {
         yield return new WaitForSeconds(5f);
-        gameObject.SetActive(false);
+        Destroy(gameObject);
+        //gameObject.SetActive(false);
     }
     //private IEnumerator HitAlphaAnimation()
     //{

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using static Define;
 
 public class PlayerCtrl : CreatureCtrl 
@@ -35,6 +36,9 @@ public class PlayerCtrl : CreatureCtrl
     private int _leadership;
     private int _appeal;
     //new private int _attackRange = 4;
+
+    public GameObject _captureButton;
+    public GameObject _getSpoilButton;
 
     protected override void Init()
     {
@@ -88,6 +92,7 @@ public class PlayerCtrl : CreatureCtrl
                 if (list_Obstacle.Count != 0) ReleaseAlpha();
             }
         }
+        if (Input.GetKeyDown(KeyCode.Q)) GoMain();
     }
 
     protected override void UpdateDead()
@@ -128,6 +133,66 @@ public class PlayerCtrl : CreatureCtrl
         }
 
         list_Obstacle.Clear();
+    }
+
+    public void OnCaptureButton() 
+    {
+        _captureButton.SetActive(true);
+    }
+
+    public void OnGetSpoilButton()
+    {
+        _getSpoilButton.SetActive(true);
+    }
+
+    public void OffCaptureButton()
+    {
+        _captureButton.SetActive(false);
+    }
+
+    public void OffGetSpoilButton()
+    {
+        _getSpoilButton.SetActive(false);
+    }
+
+    public void OnClickCaptureButton()
+    {
+        int AllyCount = GameObject.FindGameObjectsWithTag("Team").Length; //동료 숫자 파악.
+        //포획 불가능.
+        if (AllyCount-1 >= GetPlayerStatData.playerStat.Leadership) //동료의 숫자가 Leadership 숫자를 넘지않도록, -1은 Player 자신.
+        {
+            return;
+        }
+        //포획 가능.
+        GameObject go = FindNearestObjectByTag("Enemy1"); //  죽어있는상태 가장 가까운 적.
+        Destroy(go.GetComponent<EnemyCtrl>());
+        AllyCtrl AC = go.AddComponent<AllyCtrl>() as AllyCtrl;
+        AC.enabled = true;
+        go.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //다시 크기 복귀.
+        OffCaptureButton(); //버튼 off
+        OffGetSpoilButton(); //버튼 off
+    }
+
+    public void OnClickGetSpoilButton()
+    {
+        GameObject go = FindNearestObjectByTag("Enemy1"); //  죽어있는상태 가장 가까운 적.
+        Destroy(go);
+        GetPlayerStatData.playerAsset.Spoil1 += 1;
+        //Enemy pool로 돌아가는 로직 임시로 Destroy.
+        OffCaptureButton(); //버튼 off
+        OffGetSpoilButton(); //버튼 off
+    }
+
+    public void GoMain() // 임시로 메인씬으로 돌아가는 로직, 디비 값 조정.
+    {
+        GetPlayerStatData.GetComponent<BackEndGetTable>().AssetUpdate(); //자산테이블 업데이트.블
+
+        Managers.Scene.LoadScene(Define.Scene.Main);
+    }
+
+    public void OnApplicationQuit() //게임씬에서 앱 강제 종료시 호출되는 함수, 디비 값 조정.
+    {
+        GetPlayerStatData.GetComponent<BackEndGetTable>().AssetUpdate(); //자산테이블 업데이트.
     }
 }
 

@@ -26,6 +26,7 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
 
     protected override void Init()
     {
+        unitData = Resources.Load<UnitData>($"UnitTemplete/{gameObject.name}");
         base.Init();
         _agent = GetComponent<NavMeshAgent>();
         _player = GameObject.Find("player").transform;
@@ -43,6 +44,8 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
         //공격 사거리 NavMeshAgent의 stoppingDistance에 적용
         _agent.stoppingDistance = _attackRange;
         _agent.speed = _speed;
+        render = gameObject.GetComponentInChildren<Renderer>();
+        render.material.SetFloat("_OutlineWidth", 1.0f);
         //AbilityByLevel();
     }
 
@@ -183,6 +186,7 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
 
     protected override void DefaultStatDBConnection() //초기 스탯 할당.
     {
+        meadowUnit = unitData.Level[_level - 1].meadowUnit;
         _atk = unitData.Level[_level-1].Attack;
         _atkSpeed = unitData.Level[_level-1].AttackSpeed;
         _speed = unitData.Level[_level-1].MovingSpeed;
@@ -190,6 +194,9 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
         _attackRange = unitData.Level[_level-1].range;
         _dropcoin = unitData.Level[_level-1].DropCoin;
         _spoilnumber = unitData.Level[_level-1].Spoilnumber;
+        _detectionRange = unitData.Level[_level - 1].DetectionRange;
+        _playerRange = unitData.Level[_level - 1].PlayerRange;
+
     }
 
     private void OnDrawGizmosSelected()
