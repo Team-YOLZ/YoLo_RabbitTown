@@ -43,3 +43,35 @@ public class PlayerAssetData
         this.Spoil4 = int.Parse(json["row"]["Spoil4"]["N"].ToString());
     }
 }
+
+[Serializable]
+public class PlayerKillData
+{
+    [Header("UserCaputerCount_clumn")]
+    public int Chicken1;
+    public int Chicken2;
+    public int Chicken3;
+    public int Cow1;
+    public int Cow2;
+    public int Cow3;
+    public int Goat1;
+    public int Goat2;
+    public int Horse1;
+    public int Horse2;
+    public int Horse3;
+
+    public PlayerKillData(JsonData json)
+    {
+        this.Chicken1 = int.Parse(json["row"]["Chicken1"]["N"].ToString());
+        this.Chicken2 = int.Parse(json["row"]["Chicken2"]["N"].ToString());
+        this.Chicken3 = int.Parse(json["row"]["Chicken3"]["N"].ToString());
+        this.Cow1 = int.Parse(json["row"]["Cow1"]["N"].ToString());
+        this.Cow2 = int.Parse(json["row"]["Cow2"]["N"].ToString());
+        this.Cow3 = int.Parse(json["row"]["Cow3"]["N"].ToString());
+        this.Goat1 = int.Parse(json["row"]["Goat1"]["N"].ToString());
+        this.Goat2 = int.Parse(json["row"]["Goat2"]["N"].ToString());
+        this.Horse1 = int.Parse(json["row"]["Horse1"]["N"].ToString());
+        this.Horse2 = int.Parse(json["row"]["Horse2"]["N"].ToString());
+        this.Horse3 = int.Parse(json["row"]["Horse3"]["N"].ToString());
+    }
+}

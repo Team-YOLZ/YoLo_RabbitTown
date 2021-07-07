@@ -8,24 +8,30 @@ using static Define;
 
 public class CreatureCtrl : MonoBehaviour
 {
-    protected int _hp=500; // 전체체력 
-    protected float _currentHp;  //현재 체력
-    protected float _speed; //이동속도
-    protected float _atk = 1; //공격력
-    protected float _atkSpeed = 1; //공격속도
-    protected int _attackRange = 4;//공격사거리 <-agent. stopping distance
+    //TODO: 나중에 SerializeField 지워야 함.
+
+    //디비에서 할당받아야하는 공통 정보.
+    [SerializeField] protected int _hp;          // 전체체력 
+    [SerializeField] protected float _speed;     //이동속도
+    [SerializeField] protected float _atk;       //공격력
+    [SerializeField] protected float _atkSpeed;  //공격속도
+
+    //공통 고유 정보.
+    [SerializeField] protected int _attackRange;//공격사거리 <-agent. stopping distance
     public bool _rangeAttacktype = false; //근거리(false) or 원거리(true)
-
-    [SerializeField] protected int _level = 1; //유닛의 레벨
-    [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
-    [SerializeField] protected GameObject _creature;// 자기자신
     protected Animator _animator;
+    [SerializeField] protected CreatureState _state = CreatureState.Idle;
+    [SerializeField] protected GameObject _creature;// 자기자신
 
+    //변경 정보.
+    [SerializeField] protected float _currentHp;  //현재 체력
+    [SerializeField] private BoxCollider boxCollider;
+
+    //Creature 공통 정보.
+    public Renderer render;
     //공격
     Coroutine _coSkill;
 
-    [SerializeField]
-    protected CreatureState _state = CreatureState.Idle;
     public virtual CreatureState State
     {
         get { return _state; }
@@ -47,6 +53,7 @@ public class CreatureCtrl : MonoBehaviour
     private void Start()
     {
         Init2();
+        boxCollider = gameObject.GetComponent<BoxCollider>();
     }
     void Update()
     {
@@ -56,30 +63,37 @@ public class CreatureCtrl : MonoBehaviour
     protected virtual void Init() //초기화 부분(Awake)
     {
         _creature = gameObject;
-        DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
     }
     protected virtual void Init2() //초기화 부분 (Start)
     {
+        DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
         _animator = _creature.GetComponent<Animator>();
         _currentHp = _hp;
     }
+
     protected virtual void UpdateAnimation() //애니메이션 처리
     {
-        if (_state == CreatureState.Idle)
+        if (_state == CreatureState.Dead)
         {
-            _animator.Play("Idle");
+            Debug.Log("333333333");
+            StopAllCoroutines();
+            _animator.SetTrigger("Dead");
         }
         else if (_state == CreatureState.Moving)
         {
             _animator.Play("Run");
+            //_animator.ResetTrigger("Attack");
+            //_animator.SetTrigger("Run");
         }
         else if (_state == CreatureState.Skill)
         {
             _animator.Play("Attack");
+            //_animator.ResetTrigger("Run");
+            //_animator.SetTrigger("Attack");
         }
-        else //Dead
+        else 
         {
-            _animator.Play("Die");
+            _animator.Play("Idle");
         }
     }
 
@@ -105,17 +119,23 @@ public class CreatureCtrl : MonoBehaviour
     protected virtual void UpdateIdle()
     {
     }
+
     protected virtual void UpdateMoving()
     {
     }
+
     protected virtual void UpdateSkill() //공격
     {
         if (_coSkill == null)
+        {
             _coSkill = StartCoroutine(CoAttack());
+        }
     }
     protected virtual void UpdateDead()
     {
+
     }
+
     IEnumerator CoAttack()
     {
         State = CreatureState.Skill;
@@ -123,9 +143,10 @@ public class CreatureCtrl : MonoBehaviour
 
         // 피격 판정
         if (_creature.CompareTag("Team"))
+        {
             go = FindNearestObjectByTag("Enemy");
-        else
-            go = FindNearestObjectByTag("Team");
+        }
+        else go = FindNearestObjectByTag("Team");
 
         if (go != null)
         {
@@ -145,7 +166,6 @@ public class CreatureCtrl : MonoBehaviour
             if (cc != null)
                 cc.OnDamaged(_atk);
             Debug.Log("On Hit !");
-
         }
         // 대기 시간
         yield return new WaitForSeconds(_atkSpeed);
@@ -155,17 +175,19 @@ public class CreatureCtrl : MonoBehaviour
 
     public virtual void OnDamaged(float damage)
     {
-        _currentHp -= damage;
-        Debug.Log("On Hit !");
+        if (_currentHp > 0)
+        {
+            _currentHp -= damage;
+        }
 
-        if (_currentHp <= 0)
+        else
+        {
             State = CreatureState.Dead;
+        }
     }
-    private void DefaultStatDBConnection()
-    {
-        //_hp, _speed, _atk, _atkSpeed, _attackRange, _rangeAttacktype, _level, meadowUnit 설정하는 곳
-        // 유닛 별로 어떻게 설정하지..? 
 
+    protected virtual void DefaultStatDBConnection() //유닛 DefaultStatDBConnection Enemy,Ally => o Player => x
+    {
     }
 
     protected void Buff(MeadowUnit mu, bool unBuff) //버프 적용 or 해제
@@ -218,6 +240,7 @@ public class CreatureCtrl : MonoBehaviour
             }
         }
     }
+
     public void BuffHP(int bHP) //체력 버프 
     {
         if (_currentHp + bHP > 0) 
@@ -226,15 +249,18 @@ public class CreatureCtrl : MonoBehaviour
             _currentHp += bHP;
         }
     }
+
     public void buffSpeed(float bSpeed) //이속 버프
     {
         _speed += bSpeed;
         //_speed += (1 / 100 * bSpeed);
     }
+
     public void buffAttack(float bAttack) //공격력 버프
     {
         _atk += bAttack;
     }
+
     public void buffAttackSpeed(float bAttackSpeed) //공속 버프
     {
         _atkSpeed += bAttackSpeed;
@@ -248,6 +274,7 @@ public class CreatureCtrl : MonoBehaviour
      * FirstOrDefault 메소드는 List 의 첫 번째 요소를 반환. 만약 List 가 비어있다면 null을 반환.
      * 최종적으로 neareastEnemy 변수에 가장 가까운 오브젝트가 저장.
      */
+
     protected GameObject FindNearestObjectByTag(string tag)
     {
         // 탐색할 오브젝트 목록을 List 로 저장
