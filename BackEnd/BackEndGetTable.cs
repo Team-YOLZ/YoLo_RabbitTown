@@ -26,6 +26,10 @@ public class BackEndGetTable : MonoBehaviour
         InitCaptureCountTable(); //킬카운트 테이블 입력.
 
         MainPage = GameObject.Find("@MainScene").GetComponent<MainScene>();//메인 페이지 갱신위한 클래스 할당.
+
+        Debug.Log(StatTableKey);
+        BackendReturnObject bro = Backend.BMember.GetUserInfo();
+        playerStat.OwnerIndate = bro.GetReturnValuetoJSON()["row"]["inDate"].ToString();
     }
 
     static void Init()
@@ -145,6 +149,40 @@ public class BackEndGetTable : MonoBehaviour
         CountTableKey = OwnerIndate;
     }
 
+    //포획 유닛 정보 Init
+    //public void InitCaptureUnitTable()
+    //{
+    //    var bro = Backend.GameData.GetMyData("OwnUnitTable", new Where(), 10);
+    //    string OwnerIndate = "";
+    //    if (bro.IsSuccess() == false)
+    //    {
+    //        // 요청 실패 처리
+    //        Debug.Log(bro);
+    //        return;
+    //    }
+    //    if (bro.GetReturnValuetoJSON()["rows"].Count <= 0)
+    //    {
+    //        // 요청이 성공해도 where 조건에 부합하는 데이터가 없을 수 있기 때문에
+    //        // 데이터가 존재하는지 확인
+    //        // 위와 같은 new Where() 조건의 경우 테이블에 row가 하나도 없으면 Count가 0 이하 일 수 있다.
+    //        Debug.Log(bro);
+    //        return;
+    //    }
+    //    //내 테이블의 rowindate 할당.
+    //    for (int i = 0; i < bro.Rows().Count; ++i)
+    //    {
+    //        OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
+    //    }
+    //    string[] select = {"Name"};
+
+    //    // 테이블 내 해당 rowIndate를 지닌 row를 조회
+    //    // select에 존재하는 컬럼만 리턴
+    //    var BRO = Backend.GameData.Get("OwnUnitTable", OwnerIndate, select); //BackEnd Return 데이터 Get.
+    //    var json = BRO.GetReturnValuetoJSON(); //BackEnd Return 데이터 => JSON 데이터로 변환
+    //    playerKillData = new PlayerKillData(json); //PlayerData 클래스에 할당.
+    //    CountTableKey = OwnerIndate;
+    //}
+
     //(임시 양식) 공격력 증가 버튼.
     public void UpAttackButton()
     {
@@ -180,7 +218,6 @@ public class BackEndGetTable : MonoBehaviour
 
     public void AssetUpdate()
     {
-        // atk 컬럼의 값을 110으로 수정
         Param updateParam = new Param();
         updateParam.Add("Coin", playerAsset.Coin);
         updateParam.Add("Spoil1", playerAsset.Spoil1);
@@ -189,5 +226,24 @@ public class BackEndGetTable : MonoBehaviour
         updateParam.Add("Spoil4", playerAsset.Spoil4);
 
         Backend.GameData.Update("UserAssetTable", AssetTableKey, updateParam);
+    }
+
+    public void KillCountUpdate()
+    {
+        Param updateParam = new Param();
+        updateParam.Add("Chicken1", playerKillData.Chicken1);
+        updateParam.Add("Chicken2", playerKillData.Chicken2);
+        updateParam.Add("Chicken3", playerKillData.Chicken3);
+        updateParam.Add("Cow1", playerKillData.Cow1);
+        updateParam.Add("Cow2", playerKillData.Cow2);
+        updateParam.Add("Cow3", playerKillData.Cow1);
+        updateParam.Add("Goat1", playerKillData.Goat1);
+        updateParam.Add("Goat2", playerKillData.Goat2);
+        updateParam.Add("Horse1", playerKillData.Horse1);
+        updateParam.Add("Horse2", playerKillData.Horse2);
+        updateParam.Add("Horse3", playerKillData.Horse3);
+
+
+        Backend.GameData.Update("UnitCaptureCount", CountTableKey, updateParam);
     }
 }

@@ -12,6 +12,7 @@ public class PlayerStatData
     public int Hp;
     public int Leadership;
     public int Appeal;
+    public string OwnerIndate;
 
     public PlayerStatData(JsonData json) //JSON Data 할당 생성자.  
     {
