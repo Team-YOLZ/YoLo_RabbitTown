@@ -22,6 +22,7 @@ public class PlayerStatData
         this.Hp = int.Parse(json["row"]["Hp"]["N"].ToString());
         this.Leadership = int.Parse(json["row"]["Leadership"]["N"].ToString());
         this.Appeal = int.Parse(json["row"]["Appeal"]["N"].ToString());
+        this.OwnerIndate = json["row"]["owner_inDate"]["S"].ToString();
     }
 }
 
