@@ -12,6 +12,7 @@ public class PlayerStatData
     public int Hp;
     public int Leadership;
     public int Appeal;
+    public string OwnerIndate;
 
     public PlayerStatData(JsonData json) //JSON Data 할당 생성자.  
     {
@@ -21,6 +22,7 @@ public class PlayerStatData
         this.Hp = int.Parse(json["row"]["Hp"]["N"].ToString());
         this.Leadership = int.Parse(json["row"]["Leadership"]["N"].ToString());
         this.Appeal = int.Parse(json["row"]["Appeal"]["N"].ToString());
+        this.OwnerIndate = json["row"]["owner_inDate"]["S"].ToString();
     }
 }
 

@@ -21,8 +21,6 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
     public UnitData unitData;
     [SerializeField] protected int _level; //유닛의 레벨
     [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
-    [SerializeField] protected int _dropcoin; //죽으면 주는 돈.
-    [SerializeField] protected int _spoilnumber; //죽으면 주는 전리품 넘버.
 
     protected override void Init()
     {
@@ -44,93 +42,10 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
         //공격 사거리 NavMeshAgent의 stoppingDistance에 적용
         _agent.stoppingDistance = _attackRange;
         _agent.speed = _speed;
+        //팀으로 적을 포획했을 때 아웃라인 원상복귀 코드.
         render = gameObject.GetComponentInChildren<Renderer>();
         render.material.SetFloat("_OutlineWidth", 1.0f);
-        //AbilityByLevel();
     }
-
-    /*
-    private void OnEnable() //활성화 될 때 모든 팀에게 버프 적용
-    {
-        Buff(meadowUnit, true);
-    }
-
-    private void OnDisable() //비 활성화 될 때 모든 팀에게 버프 해제
-    {
-        Buff(meadowUnit, false);
-    }
-    */
-
-    //private void AbilityByLevel() //현재 레벨에 맞는 능력치 적용
-    //{
-    //    switch (meadowUnit)
-    //    {
-    //        case MeadowUnit.Chicken1:
-    //            _hp += (3 * _level);
-    //            break;
-    //        case MeadowUnit.Chicken2:
-    //            _hp += (10 * _level);
-    //            _atk += _level;
-    //            break;
-    //        case MeadowUnit.Chicken3:
-    //            _hp += (3 * _level);
-    //            _atk += (2 * _level);
-    //            break;
-    //        case MeadowUnit.Cow1:
-    //            _hp += (10 * _level);
-    //            break;
-    //        case MeadowUnit.Cow2:
-    //            _hp += (20 * _level);
-    //            break;
-    //        case MeadowUnit.Cow3:
-    //            _hp += (25 * _level);
-    //            break;
-    //        case MeadowUnit.Duck1:
-    //            _hp += (5 * _level);
-    //            _atk += _level;
-    //            break;
-    //        case MeadowUnit.Duck2:
-    //            _hp += (10 * _level);
-    //            _atk += (1.5f * _level);
-    //            break;
-    //        case MeadowUnit.Duck3:
-    //            _hp += (10 * _level);
-    //            _atk += (2 * _level);
-    //            break;
-    //        case MeadowUnit.Horse1:
-    //            _hp += (4 * _level);
-    //            _atk += _level;
-    //            break;
-    //        case MeadowUnit.Horse2:
-    //            _hp += (8 * _level);
-    //            _atk += (1.5f * _level);
-    //            break;
-    //        case MeadowUnit.Horse3:
-    //            _hp += (10 * _level);
-    //            _atk += (2 * _level);
-    //            break;
-    //        case MeadowUnit.Sheep1:
-    //            _hp += (4 * _level);
-    //            _atk += (3 * _level);
-    //            break;
-    //        case MeadowUnit.Sheep2:
-    //            _hp += (5 * _level);
-    //            _atk += (5 * _level);
-    //            break;
-    //        case MeadowUnit.Goat1:
-    //            _hp += (4 * _level);
-    //            _atk += (0.5f * _level);
-    //            _atkSpeed += (0.05f * _level);
-    //            break;
-    //        case MeadowUnit.Goat2:
-    //            _hp += (3 * _level);
-    //            _atk += (1 * _level);
-    //            _atkSpeed += (0.05f * _level);
-    //            break;
-    //        default:
-    //            break;
-    //    }
-    //}
 
     protected override void UpdateController()
     {
@@ -182,6 +97,7 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
     protected override void UpdateDead()
     {
         //죽었을 때 로직
+        Destroy(gameObject);
     }
 
     protected override void DefaultStatDBConnection() //초기 스탯 할당.
@@ -192,20 +108,7 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
         _speed = unitData.Level[_level-1].MovingSpeed;
         _hp = unitData.Level[_level-1].Hp;
         _attackRange = unitData.Level[_level-1].range;
-        _dropcoin = unitData.Level[_level-1].DropCoin;
-        _spoilnumber = unitData.Level[_level-1].Spoilnumber;
         _detectionRange = unitData.Level[_level - 1].DetectionRange;
         _playerRange = unitData.Level[_level - 1].PlayerRange;
-
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, _detectionRange); //red : 적 발견 범위
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, _attackRange); //yellow : 공격 사거리
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, _playerRange); //green : 플레이어와 유닛 내 허용 범위
     }
 }

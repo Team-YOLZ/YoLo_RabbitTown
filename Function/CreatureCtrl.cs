@@ -75,21 +75,16 @@ public class CreatureCtrl : MonoBehaviour
     {
         if (_state == CreatureState.Dead)
         {
-            Debug.Log("333333333");
             StopAllCoroutines();
             _animator.SetTrigger("Dead");
         }
         else if (_state == CreatureState.Moving)
         {
             _animator.Play("Run");
-            //_animator.ResetTrigger("Attack");
-            //_animator.SetTrigger("Run");
         }
         else if (_state == CreatureState.Skill)
         {
             _animator.Play("Attack");
-            //_animator.ResetTrigger("Run");
-            //_animator.SetTrigger("Attack");
         }
         else 
         {
@@ -274,7 +269,6 @@ public class CreatureCtrl : MonoBehaviour
      * FirstOrDefault 메소드는 List 의 첫 번째 요소를 반환. 만약 List 가 비어있다면 null을 반환.
      * 최종적으로 neareastEnemy 변수에 가장 가까운 오브젝트가 저장.
      */
-
     protected GameObject FindNearestObjectByTag(string tag)
     {
         // 탐색할 오브젝트 목록을 List 로 저장

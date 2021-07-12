@@ -19,10 +19,6 @@ public class EnemyCtrl : CreatureCtrl
     bool walkPointSet;
     public float walkPointRange;
 
-    //공격.
-    //bool alreadyAttacked;
-    //public GameObject projectile; //원거리 공격 적 위
-
     //State
     public float sightRange; //순찰범위
     public float attackRange; //공격범위
@@ -33,7 +29,8 @@ public class EnemyCtrl : CreatureCtrl
     [SerializeField] protected int _canCapturePercent; //유닛 포획 확률.
     [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
     [SerializeField] protected int _dropcoin; //죽으면 주는 돈.
-    [SerializeField] protected int _spoilnumber; //죽으면 주는 전리품 넘버.
+    public int _spoilnumber; //죽으면 주는 전리품 넘버(Player가 호출해야 하기 때문에 public). 
+    public int _spoilamount; //죽으면 주는 전리품 양(Player가 호출해야 하기 때문에 public).
     [SerializeField] protected string _enemyname; //Enemy Name
     public UnitData unitData;
     BackEndGetTable GetPlayerStatData;
@@ -74,9 +71,6 @@ public class EnemyCtrl : CreatureCtrl
             if (playerInAttackRange && playerInSightRange) State = CreatureState.Skill; //순찰범위,공격범위 모두 포함되어있을 때
         }
         base.UpdateController();
-        //renderer.material.SetFloat("Alpha", 0.5f);
-        //Color color = renderer.material.color;
-        //color.a = 0.4f;
     }
 
     protected override void UpdateSkill()
@@ -91,7 +85,7 @@ public class EnemyCtrl : CreatureCtrl
         Collider[] cols = Physics.OverlapSphere(gameObject.transform.position, 3);
         foreach (Collider col in cols)
         {
-            if (col.gameObject.layer == LayerMask.NameToLayer("Player")&& gameObject.layer== LayerMask.NameToLayer("Neutrality"))
+            if (col.gameObject.layer == LayerMask.NameToLayer("Player") && gameObject.layer == LayerMask.NameToLayer("Neutrality"))
             {
                 Debug.Log("touch");
                 render.material.SetFloat("_OutlineWidth", 1.15f);
@@ -124,33 +118,31 @@ public class EnemyCtrl : CreatureCtrl
         _attackRange = unitData.Level[0].range;
         _dropcoin = unitData.Level[0].DropCoin;
         _spoilnumber = unitData.Level[0].Spoilnumber;
+        _spoilamount = unitData.Level[0].SpoilAmount;
         _canCapturePercent = unitData.Level[0].CanCapturePercent;
         _enemyname = unitData.Level[0].Name;
     }
 
     public void RandomCapture() //적 죽었을때 포획 or go pool ,  Coin 획득 , KillCount 증가.
     {
-        gameObject.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f);
-        GetPlayerStatData.playerAsset.Coin += _dropcoin; //코인 획득.
- 
-        //여기에 킬카운트 증가 예정.
-
+        gameObject.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f); //죽은 효과를 더 살리게 위해 크기 변경.
+        GetPlayerStatData.playerAsset.Coin += _dropcoin; //몬스터 지정 코인 획득.
+        KillCount(); //킬 카운트 증가.
         int RandomPercent = Random.Range(0, 100);
         int Percent = GetPlayerStatData.playerStat.Appeal + _canCapturePercent; //기존 몬스터 포획 확률 + 플레이어 매력수치 = 포획 확률
-        //render.material.SetFloat("_Outline", 0.3f);
         if (RandomPercent <= Percent) // 포획가능
         {
             Debug.Log("포획 가능");
-            gameObject.tag = "Enemy1";
+            gameObject.tag = "IsDeadEnemy";
             gameObject.layer = LayerMask.NameToLayer("Neutrality");
         }
         else //포획불가능
         {
             Debug.Log("포획 불가능");
-            gameObject.tag = "Enemy1";
+            gameObject.tag = "GoPoolEnemy"; 
             gameObject.layer = LayerMask.NameToLayer("Neutrality");
             //알파값 두번 깜빡 거린 후 Pool로 돌아갈 예정.
-            StartCoroutine(BackPool());
+            StartCoroutine(BackPool()); //임시로 Destroy 중 오현이 오브젝트 Pool 구조 완성되면 변경 예정.
         }
     }
 
@@ -200,37 +192,54 @@ public class EnemyCtrl : CreatureCtrl
         Invoke(nameof(ReSpawn), 5f);
     }
 
+    private void KillCount() //몬스터에 따른 킬카운트 증가.
+    {
+        switch (_enemyname)
+        {
+            case "Chicken1":
+                GetPlayerStatData.playerKillData.Chicken1 += 1;
+                break;
+            case "Chicken2":
+                GetPlayerStatData.playerKillData.Chicken2 += 1;
+                break;
+            case "Chicken3":
+                GetPlayerStatData.playerKillData.Chicken3 += 1;
+                break;
+            case "Cow1":
+                GetPlayerStatData.playerKillData.Cow1 += 1;
+                break;
+            case "Cow2":
+                GetPlayerStatData.playerKillData.Cow2 += 1;
+                break;
+            case "Cow3":
+                GetPlayerStatData.playerKillData.Cow3 += 1;
+                break;
+            case "Goat1":
+                GetPlayerStatData.playerKillData.Goat1 += 1;
+                break;
+            case "Goat2":
+                GetPlayerStatData.playerKillData.Goat2 += 1;
+                break;
+            case "Horse1":
+                GetPlayerStatData.playerKillData.Horse1 += 1;
+                break;
+            case "Horse2":
+                GetPlayerStatData.playerKillData.Horse2 += 1;
+                break;
+            case "Horse3":
+                GetPlayerStatData.playerKillData.Horse3 += 1;
+                break;
+            default:
+                break;
+        }
+    }
+
     private void DeactiveDelay() => gameObject.SetActive(false);
     private void ReSpawn() => gameObject.SetActive(true); //Respawn
-
-    //private void OnDrawGizmosSelected() //공격 범위 순찰 범위 영역 보기 위해.
-    //{
-    //    Gizmos.color = Color.red;
-    //    Gizmos.DrawWireSphere(transform.position, attackRange);
-    //    Gizmos.color = Color.yellow;
-    //    Gizmos.DrawWireSphere(transform.position, sightRange);
-    //}
 
     private IEnumerator BackPool()
     {
         yield return new WaitForSeconds(5f);
         Destroy(gameObject);
-        //gameObject.SetActive(false);
     }
-    //private IEnumerator HitAlphaAnimation()
-    //{
-    ////현재 적의 색상.
-    //Color color = renderer.color;
-
-    ////적의 투명도 40퍼센트.
-    //color.a = 0.4f;
-    //renderer.color = color;
-
-    ////0.05초 대기
-    //yield return new WaitForSeconds(0.05f);
-
-    ////적의 투명도 100프로 설정.
-    //color.a = 1.0f;
-    //renderer.color = color;
-    //}
 }
