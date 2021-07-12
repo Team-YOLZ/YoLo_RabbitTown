@@ -133,13 +133,13 @@ public class EnemyCtrl : CreatureCtrl
         if (RandomPercent <= Percent) // 포획가능
         {
             Debug.Log("포획 가능");
-            gameObject.tag = "Enemy1";
+            gameObject.tag = "IsDeadEnemy";
             gameObject.layer = LayerMask.NameToLayer("Neutrality");
         }
         else //포획불가능
         {
             Debug.Log("포획 불가능");
-            gameObject.tag = "Enemy1"; 
+            gameObject.tag = "GoPoolEnemy"; 
             gameObject.layer = LayerMask.NameToLayer("Neutrality");
             //알파값 두번 깜빡 거린 후 Pool로 돌아갈 예정.
             StartCoroutine(BackPool()); //임시로 Destroy 중 오현이 오브젝트 Pool 구조 완성되면 변경 예정.

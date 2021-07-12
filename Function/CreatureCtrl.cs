@@ -128,7 +128,7 @@ public class CreatureCtrl : MonoBehaviour
     }
     protected virtual void UpdateDead()
     {
-
+        Destroy(gameObject);
     }
 
     IEnumerator CoAttack()

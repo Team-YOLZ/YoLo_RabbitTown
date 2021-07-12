@@ -3,9 +3,6 @@ using BackEnd;
 
 public class BackEndGetTable : MonoBehaviour
 {
-    static BackEndGetTable s_instance; //유일성이 보장된다.
-    static BackEndGetTable Instance { get { Init(); return s_instance; } }
-
     public PlayerStatData playerStat;
     public PlayerAssetData playerAsset;
     public PlayerKillData playerKillData;
@@ -14,37 +11,17 @@ public class BackEndGetTable : MonoBehaviour
     private string AssetTableKey;
     private string CountTableKey;
 
-    private MainScene MainPage;
-
     private void Awake()
     {
-        Init(); //싱글톤 보장.
-
-
         InitUserStatTable(); //스탯 테이블 입력.
         InitUserAssetTable(); //자산 테이블 입력.
         InitCaptureCountTable(); //킬카운트 테이블 입력.
 
-        MainPage = GameObject.Find("@MainScene").GetComponent<MainScene>();//메인 페이지 갱신위한 클래스 할당.
+        //MainPage = GameObject.Find("@MainScene").GetComponent<MainScene>();//메인 페이지 갱신위한 클래스 할당.
 
         Debug.Log(StatTableKey);
         BackendReturnObject bro = Backend.BMember.GetUserInfo();
         playerStat.OwnerIndate = bro.GetReturnValuetoJSON()["row"]["inDate"].ToString();
-    }
-
-    static void Init()
-    {
-        if (s_instance == null)
-        {
-            GameObject go = GameObject.Find("UserTableInformation");
-            if (go == null)
-            {
-                go = new GameObject { name = "UserTableInformation" };
-                go.AddComponent<Managers>();
-            }
-            DontDestroyOnLoad(go);
-            s_instance = go.GetComponent<BackEndGetTable>();
-        }
     }
 
     //유저 스탯 테이블 init.
@@ -149,40 +126,6 @@ public class BackEndGetTable : MonoBehaviour
         CountTableKey = OwnerIndate;
     }
 
-    //포획 유닛 정보 Init
-    //public void InitCaptureUnitTable()
-    //{
-    //    var bro = Backend.GameData.GetMyData("OwnUnitTable", new Where(), 10);
-    //    string OwnerIndate = "";
-    //    if (bro.IsSuccess() == false)
-    //    {
-    //        // 요청 실패 처리
-    //        Debug.Log(bro);
-    //        return;
-    //    }
-    //    if (bro.GetReturnValuetoJSON()["rows"].Count <= 0)
-    //    {
-    //        // 요청이 성공해도 where 조건에 부합하는 데이터가 없을 수 있기 때문에
-    //        // 데이터가 존재하는지 확인
-    //        // 위와 같은 new Where() 조건의 경우 테이블에 row가 하나도 없으면 Count가 0 이하 일 수 있다.
-    //        Debug.Log(bro);
-    //        return;
-    //    }
-    //    //내 테이블의 rowindate 할당.
-    //    for (int i = 0; i < bro.Rows().Count; ++i)
-    //    {
-    //        OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
-    //    }
-    //    string[] select = {"Name"};
-
-    //    // 테이블 내 해당 rowIndate를 지닌 row를 조회
-    //    // select에 존재하는 컬럼만 리턴
-    //    var BRO = Backend.GameData.Get("OwnUnitTable", OwnerIndate, select); //BackEnd Return 데이터 Get.
-    //    var json = BRO.GetReturnValuetoJSON(); //BackEnd Return 데이터 => JSON 데이터로 변환
-    //    playerKillData = new PlayerKillData(json); //PlayerData 클래스에 할당.
-    //    CountTableKey = OwnerIndate;
-    //}
-
     //(임시 양식) 공격력 증가 버튼.
     public void UpAttackButton()
     {
@@ -195,7 +138,7 @@ public class BackEndGetTable : MonoBehaviour
         InitUserAssetTable(); //수정된 UserAssetTable 정보 갱신.
 
         //3단계 수정된 PlayerData 정보 스텟 페이지에 재 할당.
-        MainPage.EditPage(); //스탯 페이지 갱신.
+        //MainPage.EditPage(); //스탯 페이지 갱신.
     }
 
     //임시 공격력 증가 함수.

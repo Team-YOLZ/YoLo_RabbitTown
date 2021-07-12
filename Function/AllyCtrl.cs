@@ -97,6 +97,7 @@ public class AllyCtrl : CreatureCtrl //동료 컨트롤러
     protected override void UpdateDead()
     {
         //죽었을 때 로직
+        Destroy(gameObject);
     }
 
     protected override void DefaultStatDBConnection() //초기 스탯 할당.

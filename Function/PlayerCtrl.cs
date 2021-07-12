@@ -182,7 +182,7 @@ public class PlayerCtrl : CreatureCtrl
             return;
         }
         //포획 가능.
-        GameObject go = FindNearestObjectByTag("Enemy1"); //  죽어있는상태 가장 가까운 적.
+        GameObject go = FindNearestObjectByTag("IsDeadEnemy"); //  죽어있는상태 가장 가까운 적.
         Destroy(go.GetComponent<EnemyCtrl>());
         AllyCtrl AC = go.AddComponent<AllyCtrl>() as AllyCtrl;
         AC.enabled = true;
@@ -193,7 +193,7 @@ public class PlayerCtrl : CreatureCtrl
 
     public void OnClickGetSpoilButton()
     {
-        GameObject go = FindNearestObjectByTag("Enemy1"); //죽어있는상태 가장 가까운 적(Select).
+        GameObject go = FindNearestObjectByTag("IsDeadEnemy"); //죽어있는상태 가장 가까운 적(Select).
         EnemyCtrl enemyCtrl = go.GetComponent<EnemyCtrl>(); // Select된 적 정보 Get.
         //Get된 정보에 따른 전리품 획득 로직.
         switch(enemyCtrl._spoilnumber)
