@@ -17,8 +17,6 @@ public class BackEndGetTable : MonoBehaviour
         InitUserAssetTable(); //자산 테이블 입력.
         InitCaptureCountTable(); //킬카운트 테이블 입력.
 
-        //MainPage = GameObject.Find("@MainScene").GetComponent<MainScene>();//메인 페이지 갱신위한 클래스 할당.
-
         Debug.Log(StatTableKey);
         BackendReturnObject bro = Backend.BMember.GetUserInfo();
         playerStat.OwnerIndate = bro.GetReturnValuetoJSON()["row"]["inDate"].ToString();
@@ -137,7 +135,7 @@ public class BackEndGetTable : MonoBehaviour
         InitUserStatTable(); //수정된 UserTable 정보 갱신.
         InitUserAssetTable(); //수정된 UserAssetTable 정보 갱신.
 
-        //3단계 수정된 PlayerData 정보 스텟 페이지에 재 할당.
+        //3단계 수정된 PlayerData 정보 스텟 페이지에 재 할당. => MainScene 컴포넌트로 기능 이전.
         //MainPage.EditPage(); //스탯 페이지 갱신.
     }
 
