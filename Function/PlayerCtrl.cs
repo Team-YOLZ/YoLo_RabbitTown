@@ -55,16 +55,17 @@ public class PlayerCtrl : CreatureCtrl
 
     protected override void Init2()
     {
-        rb = _creature.GetComponent<Rigidbody>(); 
+        rb = _creature.GetComponent<Rigidbody>();
         base.Init2();
         //Player가 가지고 있는 Creature Name,Count 조회.
         Where where = new Where();
         where.Equal("owner_inDate", GetPlayerStatData.playerStat.OwnerIndate);
         var bro = Backend.GameData.GetMyData("OwnUnitTable", where, 50);
         Debug.Log(bro.GetReturnValuetoJSON()["rows"].Count);
-        for(int i=0; i< bro.GetReturnValuetoJSON()["rows"].Count; i++) //(임시코드)가지고 있는 Creature 수까지 반복. 게임씬에는 생성.디비 테이블에선 삭제.
+        for (int i = 0; i < bro.GetReturnValuetoJSON()["rows"].Count; i++) //(임시코드)가지고 있는 Creature 수까지 반복. 게임씬에는 생성.디비 테이블에선 삭제.
         {
-            string Name = bro.Rows()[0]["Name"]["S"].ToString();
+            string Name = bro.Rows()[i]["Name"]["S"].ToString();
+            Debug.Log(Name);
             GameObject go = Managers.Resource.Instantiate($"Creature_YJ/{Name}");
             Destroy(go.GetComponent<EnemyCtrl>());
             AllyCtrl AC = go.AddComponent<AllyCtrl>() as AllyCtrl;
