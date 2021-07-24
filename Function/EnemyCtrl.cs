@@ -9,7 +9,7 @@ public class EnemyCtrl : CreatureCtrl
 {
     private NavMeshAgent _agent;
     private Transform _playertr;
-    public GameObject player;
+    private GameObject player;
     private PlayerCtrl PlayerCtrl;
     private Vector3 Mine;// 자신 위치.
     private LayerMask _whatIsGround, _whatIsPlayer;
@@ -55,6 +55,7 @@ public class EnemyCtrl : CreatureCtrl
         _agent.speed = _speed;
 
         GetPlayerStatData = GameObject.Find("UserTableInformation").GetComponent<BackEndGetTable>();
+        player = GameObject.Find("player");
         PlayerCtrl = player.GetComponent<PlayerCtrl>();
         render = gameObject.GetComponentInChildren<Renderer>();
     }
