@@ -9,19 +9,19 @@ public class WorldObjectGenerator : MonoBehaviour
 
     //나무, 잔디, 꽃, 바위, 우물 ,구름, 부쉬 
     [SerializeField]
-    int _treeMaxCount = 60;
+    int _treeMaxCount;
     [SerializeField]
-    int _grassMaxCount = 400;
+    int _grassMaxCount;
     [SerializeField]
-    int _flowerMaxCount = 100;
+    int _flowerMaxCount;
     [SerializeField]
-    int _rockMaxCount = 10;
+    int _rockMaxCount;
     [SerializeField]
-    int _wellMaxCount = 0;
+    int _wellMaxCount;
     [SerializeField]
-    int _bushMaxCount = 5;
+    int _bushMaxCount;
     [SerializeField]
-    int _cloudMaxCount = 10;
+    int _cloudMaxCount;
 
     [SerializeField]
     GameObject[] _generateFieldPos; //필드에 오브젝트들 생성 위치
@@ -29,9 +29,9 @@ public class WorldObjectGenerator : MonoBehaviour
     GameObject[] _generateSkyPos; //하늘에 오브젝트들 생성 위치
 
     [SerializeField]
-    float _spawnFieldRadius = 600.0f; //필드 생성 범위
+    float _spawnFieldRadius; //필드 생성 범위
     [SerializeField]
-    float _spawnSkyRadius = 1000.0f; //하늘 생성 범위 
+    float _spawnSkyRadius; //하늘 생성 범위 
 
     RaycastHit _hit;
     int _layerMask; //필드레이어
@@ -145,41 +145,51 @@ public class WorldObjectGenerator : MonoBehaviour
         //to do 우물
     }
 
-        (Vector3 randPos, Vector3 normal) RandPosOrNormal(int num) //오브젝트의 랜덤 좌표와 법선벡터 반환문
+    (Vector3 randPos, Vector3 normal) RandPosOrNormal(int num) //오브젝트의 랜덤 좌표와 법선벡터 반환문
+    {
+        Vector3 randPosition;
+        Vector3 normal;
+        Vector3 raycastOrigin;
+        Vector3 dir;
+        while (true)
         {
-            Vector3 randPosition;
-            Vector3 normal;
             Vector3 randDir = Random.insideUnitSphere * _spawnFieldRadius; // 미리 지정해준 생성 범위(_spawnRadius)내 좌표
             randDir.y = 0;
             randPosition = _generateFieldPos[num].transform.position + randDir;
-            normal = FindHeightField(randPosition).normal;
-            randPosition.y = FindHeightField(randPosition).height;
-
-            return (randPosition, normal);
-        }
-
-
-        (float height, Vector3 normal) FindHeightField(Vector3 target)   //위에서 아래로 레이케스트를 쏜 다음 오브젝트가 생성 될 정확한 높이를 구함, 이 때 법선벡터도 구함
-        {                                                               //(지형의 높이 , 지형의 법선벡터)
-            Vector3 raycastOrigin = target;
+            raycastOrigin = randPosition;
             raycastOrigin.y = 500.0f;
-            var dir = target - raycastOrigin;
-
-            if (Physics.Raycast(raycastOrigin, dir.normalized, out _hit, Mathf.Infinity, _layerMask))
-            {
-                return (_hit.point.y, _hit.normal);
-            }
-            return (0, Vector3.up);
+            dir = randPosition - raycastOrigin;
+            if (Physics.Raycast(raycastOrigin, dir.normalized, out _hit, Mathf.Infinity, _layerMask)) //필드 안에 있는 좌표라면
+                break;
         }
+        normal = FindHeightField(randPosition).normal;
+        randPosition.y = FindHeightField(randPosition).height;
 
-        //생성 위치와 범위 보기
-        private void OnDrawGizmos()
+        return (randPosition, normal);
+    }
+
+
+    (float height, Vector3 normal) FindHeightField(Vector3 target)   //위에서 아래로 레이케스트를 쏜 다음 오브젝트가 생성 될 정확한 높이를 구함, 이 때 법선벡터도 구함
+    {                                                               //(지형의 높이 , 지형의 법선벡터)
+        Vector3 raycastOrigin = target;
+        raycastOrigin.y = 500.0f;
+        var dir = target - raycastOrigin;
+
+        if (Physics.Raycast(raycastOrigin, dir.normalized, out _hit, Mathf.Infinity, _layerMask))
         {
-            for (int i = 0; i < _generateFieldPos.Length; i++)
-            {
-                Gizmos.color = Color.gray;
-                Gizmos.DrawWireSphere(_generateFieldPos[i].transform.position, _spawnFieldRadius);
-            }
+            return (_hit.point.y, _hit.normal);
+        }
+        return (0, Vector3.up);
+    }
+
+    //생성 위치와 범위 보기
+    private void OnDrawGizmos()
+    {
+        for (int i = 0; i < _generateFieldPos.Length; i++)
+        {
+            Gizmos.color = Color.gray;
+            Gizmos.DrawWireSphere(_generateFieldPos[i].transform.position, _spawnFieldRadius);
+        }
 
         for (int i = 0; i < _generateSkyPos.Length; i++)
         {
@@ -187,4 +197,4 @@ public class WorldObjectGenerator : MonoBehaviour
             Gizmos.DrawWireSphere(_generateSkyPos[i].transform.position, _spawnSkyRadius);
         }
     }
-    } 
+}
