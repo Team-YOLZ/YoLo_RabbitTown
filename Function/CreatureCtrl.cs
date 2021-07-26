@@ -8,24 +8,30 @@ using static Define;
 
 public class CreatureCtrl : MonoBehaviour
 {
-    protected int _hp=500; // 전체체력 
-    protected float _currentHp;  //현재 체력
-    protected float _speed; //이동속도
-    protected float _atk = 1; //공격력
-    protected float _atkSpeed = 1; //공격속도
-    protected int _attackRange = 10;//공격사거리 <-agent. stopping distance
+    //TODO: 나중에 SerializeField 지워야 함.
+
+    //디비에서 할당받아야하는 공통 정보.
+    [SerializeField] protected int _hp;          // 전체체력 
+    [SerializeField] protected float _speed;     //이동속도
+    [SerializeField] protected float _atk;       //공격력
+    [SerializeField] protected float _atkSpeed;  //공격속도
+
+    //공통 고유 정보.
+    [SerializeField] protected int _attackRange;//공격사거리 <-agent. stopping distance
     public bool _rangeAttacktype = false; //근거리(false) or 원거리(true)
-
-    [SerializeField] protected int _level = 1; //유닛의 레벨
-    [SerializeField] protected MeadowUnit meadowUnit = MeadowUnit.Null;// 어떤 유닛인지
-    [SerializeField] protected GameObject _creature;// 자기자신
     protected Animator _animator;
+    [SerializeField] protected CreatureState _state = CreatureState.Idle;
+    [SerializeField] protected GameObject _creature;// 자기자신
 
+    //변경 정보.
+    [SerializeField] protected float _currentHp;  //현재 체력
+    [SerializeField] private BoxCollider boxCollider;
+
+    //Creature 공통 정보.
+    public Renderer render;
     //공격
     Coroutine _coSkill;
 
-    [SerializeField]
-    protected CreatureState _state = CreatureState.Idle;
     public virtual CreatureState State
     {
         get { return _state; }
@@ -47,6 +53,7 @@ public class CreatureCtrl : MonoBehaviour
     private void Start()
     {
         Init2();
+        boxCollider = gameObject.GetComponent<BoxCollider>();
     }
     void Update()
     {
@@ -56,18 +63,20 @@ public class CreatureCtrl : MonoBehaviour
     protected virtual void Init() //초기화 부분(Awake)
     {
         _creature = gameObject;
-        DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
     }
     protected virtual void Init2() //초기화 부분 (Start)
     {
+        DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
         _animator = _creature.GetComponent<Animator>();
         _currentHp = _hp;
     }
+
     protected virtual void UpdateAnimation() //애니메이션 처리
     {
-        if (_state == CreatureState.Idle)
+        if (_state == CreatureState.Dead)
         {
-            _animator.Play("Idle");
+            StopAllCoroutines();
+            _animator.SetTrigger("Dead");
         }
         else if (_state == CreatureState.Moving)
         {
@@ -77,9 +86,9 @@ public class CreatureCtrl : MonoBehaviour
         {
             _animator.Play("Attack");
         }
-        else //Dead
+        else 
         {
-            _animator.Play("Die");
+            _animator.Play("Idle");
         }
     }
 
@@ -105,17 +114,23 @@ public class CreatureCtrl : MonoBehaviour
     protected virtual void UpdateIdle()
     {
     }
+
     protected virtual void UpdateMoving()
     {
     }
+
     protected virtual void UpdateSkill() //공격
     {
         if (_coSkill == null)
+        {
             _coSkill = StartCoroutine(CoAttack());
+        }
     }
     protected virtual void UpdateDead()
     {
+
     }
+
     IEnumerator CoAttack()
     {
         State = CreatureState.Skill;
@@ -123,49 +138,50 @@ public class CreatureCtrl : MonoBehaviour
 
         // 피격 판정
         if (_creature.CompareTag("Team"))
+        {
             go = FindNearestObjectByTag("Enemy");
-        else
-            go = FindNearestObjectByTag("Team");
+        }
+        else go = FindNearestObjectByTag("Team");
 
         if (go != null)
         {
             transform.LookAt(go.transform); //공격대상 바라보기
             if (_rangeAttacktype) //원거리 유닛이면 발사체 생성
             {
-                GameObject arrow = Managers.Resource.Instantiate($"Creature/Arrow_{(_creature.name).Substring(0, _creature.name.Length-1)}"); //이름뒤에 숫자 빼기
+                var arrowPool = _creature.GetComponent<ArrowPool>();//ArrowPool컴포넌트를 가지고 와서
+                var arrow = arrowPool.GetObject(); //큐에 들어 있는 화살 사용
                 if (arrow != null)
                 {
-                    arrow.transform.position = _creature.transform.position + new Vector3(0, 2, 1);
-                    ArrowCtrl ac = arrow.GetComponent<ArrowCtrl>();
-                    if (ac != null)
-                        ac.fire(go);
+                    arrow.transform.position = _creature.transform.position + Vector3.up;
+                    arrow.fire(go, _creature);
                 }
             }
             CreatureCtrl cc = go.GetComponent<CreatureCtrl>();
             if (cc != null)
                 cc.OnDamaged(_atk);
             Debug.Log("On Hit !");
-
         }
         // 대기 시간
-        yield return new WaitForSeconds(_atkSpeed);
+        yield return new WaitForSeconds(1/_atkSpeed);
         _coSkill = null;
         State = CreatureState.Idle; // <- 공격하는게 어색하다 싶으면 Moving으로 바꿔보기
     }
 
     public virtual void OnDamaged(float damage)
     {
-        _currentHp -= damage;
-        Debug.Log("On Hit !");
+        if (_currentHp > 0)
+        {
+            _currentHp -= damage;
+        }
 
-        if (_currentHp <= 0)
+        else
+        {
             State = CreatureState.Dead;
+        }
     }
-    private void DefaultStatDBConnection()
-    {
-        //_hp, _speed, _atk, _atkSpeed, _attackRange, _rangeAttacktype, _level, meadowUnit 설정하는 곳
-        // 유닛 별로 어떻게 설정하지..? 
 
+    protected virtual void DefaultStatDBConnection() //유닛 DefaultStatDBConnection Enemy,Ally => o Player => x
+    {
     }
 
     protected void Buff(MeadowUnit mu, bool unBuff) //버프 적용 or 해제
@@ -218,6 +234,7 @@ public class CreatureCtrl : MonoBehaviour
             }
         }
     }
+
     public void BuffHP(int bHP) //체력 버프 
     {
         if (_currentHp + bHP > 0) 
@@ -226,15 +243,18 @@ public class CreatureCtrl : MonoBehaviour
             _currentHp += bHP;
         }
     }
+
     public void buffSpeed(float bSpeed) //이속 버프
     {
         _speed += bSpeed;
         //_speed += (1 / 100 * bSpeed);
     }
+
     public void buffAttack(float bAttack) //공격력 버프
     {
         _atk += bAttack;
     }
+
     public void buffAttackSpeed(float bAttackSpeed) //공속 버프
     {
         _atkSpeed += bAttackSpeed;

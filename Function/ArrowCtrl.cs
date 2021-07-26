@@ -5,13 +5,13 @@ using DG.Tweening;
 
 public class ArrowCtrl : MonoBehaviour
 {
-    //나중에 풀링방식으로 변경시켜야함.
-    //dotween에서도 풀링시키는게 있는것같은데 알아보는중..
-    public void fire(GameObject enemy)
+    public void fire(GameObject enemy, GameObject origin)
     {
-        transform.DOMove(enemy.transform.position, 0.5f).OnComplete(() =>
+        //이 스크립트를 가지고 있는 GameObject가 enemy위치로 , @f 시간만큼 이동
+        transform.DOMove(enemy.transform.position + Vector3.up, 1f).OnComplete(() =>
         {
-            Destroy(gameObject); 
+            //이동이 완료되면 풀링
+            origin.GetComponent<ArrowPool>().ReturnObject(this);
         });
     }
 }
