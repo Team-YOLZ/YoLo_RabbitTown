@@ -26,11 +26,12 @@ public class GameScene : BaseScene
 
     private void Update()
     {
+        // 적케릭터 풀링 양식
         if (Input.GetKeyDown(KeyCode.A))
-            list1.Add(EnemyPool.GetObject("Goat1"));
+            list1.Add(EnemyPool.GetObject("Goat1"));  //Goat1   생성(pop)
         if (Input.GetKeyDown(KeyCode.S))
             foreach (EnemyCtrl obj in list1)
-                EnemyPool.ReturnObject(obj);
+                EnemyPool.ReturnObject(obj);  //<-obj 삭제 (push)
 
         if (Input.GetKeyDown(KeyCode.Q))
             list2.Add(EnemyPool.GetObject("Chicken1"));
