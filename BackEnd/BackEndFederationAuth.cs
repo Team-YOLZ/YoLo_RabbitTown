@@ -109,6 +109,8 @@ public class BackEndFederationAuth : MonoBehaviour
                 case "201":
                     Debug.Log("신규 회원가입 완료.");
     gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
+     gameObject.GetComponent<BackEndGameInfo>().InsertUserAssetDataTable();//유저 자산 테이블 생성.
+    gameObject.GetComponent<BackEndGameInfo>().InsertUnitCaptureCountTable();//유저 유닛 포획 도감 테이블 생성.
                     break;
             }
             //Managers.Scene.LoadScene(Define.Scene.Main);
@@ -149,6 +151,8 @@ public class BackEndFederationAuth : MonoBehaviour
             Debug.Log("APPLE 로그인 성공");
             //Managers.Scene.LoadScene(Define.Scene.Main);
             gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
+            gameObject.GetComponent<BackEndGameInfo>().InsertUserAssetDataTable();//유저 자산 테이블 생성.
+            gameObject.GetComponent<BackEndGameInfo>().InsertUnitCaptureCountTable();//유저 유닛 포획 도감 테이블 생성.
             LoginCanvas.SetActive(false);
             TapCanvs.SetActive(true);
         }
@@ -168,6 +172,8 @@ public class BackEndFederationAuth : MonoBehaviour
         {
             Debug.Log("회원가입에 성공했습니다");
             gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
+            gameObject.GetComponent<BackEndGameInfo>().InsertUserAssetDataTable();//유저 자산 테이블 생성.
+            gameObject.GetComponent<BackEndGameInfo>().InsertUnitCaptureCountTable();//유저 유닛 포획 도감 테이블 생성.
         }
     }
 
