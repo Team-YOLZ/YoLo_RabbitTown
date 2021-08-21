@@ -12,7 +12,7 @@ public class PoolManager
 
         Stack<Poolable> _poolStack = new Stack<Poolable>();
 
-        public void Init(GameObject original, int count = 30)
+        public void Init(GameObject original, int count = 10)
         {
             Original = original;
             Root = new GameObject().transform;
@@ -37,7 +37,7 @@ public class PoolManager
 
             poolable.transform.parent = Root;
             poolable.gameObject.SetActive(false);
-            poolable.IsUsing = false;
+            //poolable.IsUsing = false;
             _poolStack.Push(poolable);
         }
 
@@ -57,7 +57,7 @@ public class PoolManager
                 poolable.transform.parent = Managers.Scene.CurrentScene.transform;
 
             poolable.transform.parent = parent;
-            poolable.IsUsing = true;
+            //poolable.IsUsing = true;
 
             return poolable;
         }
@@ -75,7 +75,7 @@ public class PoolManager
         }
     }
 
-    public void CreatePool(GameObject original, int count = 30)
+    public void CreatePool(GameObject original, int count = 10)
     {
         Pool pool = new Pool();
         pool.Init(original, count);

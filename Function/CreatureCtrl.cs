@@ -148,13 +148,12 @@ public class CreatureCtrl : MonoBehaviour
             transform.LookAt(go.transform); //공격대상 바라보기
             if (_rangeAttacktype) //원거리 유닛이면 발사체 생성
             {
-                GameObject arrow = Managers.Resource.Instantiate($"Creature/Arrow_{(_creature.name).Substring(0, _creature.name.Length-1)}"); //이름뒤에 숫자 빼기
+                var arrowPool = _creature.GetComponent<ArrowPool>();//ArrowPool컴포넌트를 가지고 와서
+                var arrow = arrowPool.GetObject(); //큐에 들어 있는 화살 사용
                 if (arrow != null)
                 {
-                    arrow.transform.position = _creature.transform.position + new Vector3(0, 2, 1);
-                    ArrowCtrl ac = arrow.GetComponent<ArrowCtrl>();
-                    if (ac != null)
-                        ac.fire(go);
+                    arrow.transform.position = _creature.transform.position + Vector3.up;
+                    arrow.fire(go, _creature);
                 }
             }
             CreatureCtrl cc = go.GetComponent<CreatureCtrl>();
@@ -163,7 +162,7 @@ public class CreatureCtrl : MonoBehaviour
             Debug.Log("On Hit !");
         }
         // 대기 시간
-        yield return new WaitForSeconds(_atkSpeed);
+        yield return new WaitForSeconds(1/_atkSpeed);
         _coSkill = null;
         State = CreatureState.Idle; // <- 공격하는게 어색하다 싶으면 Moving으로 바꿔보기
     }
