@@ -7,8 +7,8 @@ public class PlayerStatData
 {
     [Header("UserStatTable_column")]
     public int Attack;
-    public int AttackSpeed;
-    public int MovingSpeed;
+    public float AttackSpeed;
+    public float MovingSpeed;
     public int Hp;
     public int Leadership;
     public int Appeal;
@@ -17,8 +17,8 @@ public class PlayerStatData
     public PlayerStatData(JsonData json) //JSON Data 할당 생성자.  
     {
         this.Attack = int.Parse(json["row"]["Attack"]["N"].ToString());
-        this.AttackSpeed = int.Parse(json["row"]["AttackSpeed"]["N"].ToString());
-        this.MovingSpeed = int.Parse(json["row"]["MovingSpeed"]["N"].ToString());
+        this.AttackSpeed = float.Parse(json["row"]["AttackSpeed"]["N"].ToString());
+        this.MovingSpeed = float.Parse(json["row"]["MovingSpeed"]["N"].ToString());
         this.Hp = int.Parse(json["row"]["Hp"]["N"].ToString());
         this.Leadership = int.Parse(json["row"]["Leadership"]["N"].ToString());
         this.Appeal = int.Parse(json["row"]["Appeal"]["N"].ToString());
@@ -41,8 +41,8 @@ public class PlayerAssetData
         this.Coin = int.Parse(json["row"]["Coin"]["N"].ToString());
         this.Spoil1 = int.Parse(json["row"]["Spoil1"]["N"].ToString());
         this.Spoil2 = int.Parse(json["row"]["Spoil2"]["N"].ToString());
-        this.Spoil3 = int.Parse(json["row"]["Spoil3"]["N"].ToString());
-        this.Spoil4 = int.Parse(json["row"]["Spoil4"]["N"].ToString());
+        //this.Spoil3 = int.Parse(json["row"]["Spoil3"]["N"].ToString());
+        //this.Spoil4 = int.Parse(json["row"]["Spoil4"]["N"].ToString());
     }
 }
 
@@ -56,11 +56,16 @@ public class PlayerKillData
     public int Cow1;
     public int Cow2;
     public int Cow3;
-    public int Goat1;
-    public int Goat2;
     public int Horse1;
     public int Horse2;
     public int Horse3;
+    public int Goat1;
+    public int Goat2;
+    public int Duck1;
+    public int Duck2;
+    public int Duck3;
+    public int Sheep1;
+    public int Sheep2;
 
     public PlayerKillData(JsonData json)
     {
@@ -70,10 +75,16 @@ public class PlayerKillData
         this.Cow1 = int.Parse(json["row"]["Cow1"]["N"].ToString());
         this.Cow2 = int.Parse(json["row"]["Cow2"]["N"].ToString());
         this.Cow3 = int.Parse(json["row"]["Cow3"]["N"].ToString());
-        this.Goat1 = int.Parse(json["row"]["Goat1"]["N"].ToString());
-        this.Goat2 = int.Parse(json["row"]["Goat2"]["N"].ToString());
+        this.Duck1 = int.Parse(json["row"]["Duck1"]["N"].ToString());
+        this.Duck2 = int.Parse(json["row"]["Duck2"]["N"].ToString());
+        this.Duck3 = int.Parse(json["row"]["Duck3"]["N"].ToString());
         this.Horse1 = int.Parse(json["row"]["Horse1"]["N"].ToString());
         this.Horse2 = int.Parse(json["row"]["Horse2"]["N"].ToString());
         this.Horse3 = int.Parse(json["row"]["Horse3"]["N"].ToString());
+        this.Goat1 = int.Parse(json["row"]["Goat1"]["N"].ToString());
+        this.Goat2 = int.Parse(json["row"]["Goat2"]["N"].ToString());
+        this.Sheep1 = int.Parse(json["row"]["Sheep1"]["N"].ToString());
+        this.Sheep2 = int.Parse(json["row"]["Sheep2"]["N"].ToString());
+
     }
 }

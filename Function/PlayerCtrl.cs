@@ -4,6 +4,7 @@ using UnityEngine;
 using BackEnd;
 using UnityEngine.UI;
 using static Define;
+using UnityEngine.SceneManagement;
 
 public class PlayerCtrl : CreatureCtrl 
 {
@@ -38,16 +39,25 @@ public class PlayerCtrl : CreatureCtrl
     private int _leadership;
     private int _appeal;
 
+    [Header("Buttons")]
     public GameObject _captureButton;
     public GameObject _getSpoilButton;
+    public GameObject _warpButton;
+
+    [Header("Warp")]
+    public Transform _portal1;
+    public Transform _portal2;
+    private int _whatWarp; // 1 -워프1 , 2 -워프2
 
     //BackEnd 연동 위한 Get String My ID
     private string OwnerIndateKey;
 
+    [SerializeField] Image DepthImage;
+
     protected override void Init()
     {
         _creature = gameObject;
-        _whatIsEnemy = 1 << LayerMask.NameToLayer("Enemy");
+        _whatIsEnemy = (1 << LayerMask.NameToLayer("Enemy")) + (1 << LayerMask.NameToLayer("Boss"));
 
         GetPlayerStatData = GameObject.Find("UserTableInformation").GetComponent<BackEndGetTable>();
         DefaultStatDBConnection(); //플레이어 능력치 적용.
@@ -61,37 +71,96 @@ public class PlayerCtrl : CreatureCtrl
         Where where = new Where();
         where.Equal("owner_inDate", GetPlayerStatData.playerStat.OwnerIndate);
         var bro = Backend.GameData.GetMyData("OwnUnitTable", where, 50);
-        Debug.Log(bro.GetReturnValuetoJSON()["rows"].Count);
+        //Debug.Log(bro.GetReturnValuetoJSON()["rows"].Count);
         for (int i = 0; i < bro.GetReturnValuetoJSON()["rows"].Count; i++) //(임시코드)가지고 있는 Creature 수까지 반복. 게임씬에는 생성.디비 테이블에선 삭제.
         {
             string Name = bro.Rows()[i]["Name"]["S"].ToString();
-            Debug.Log(Name);
             GameObject go = Managers.Resource.Instantiate($"Creature_YJ/{Name}");
+            Vector3 randPos = gameObject.transform.position + new Vector3(Random.Range(-10, 10), 0, Random.Range(-10, 10));
+            go.transform.position = randPos;
             Destroy(go.GetComponent<EnemyCtrl>());
             AllyCtrl AC = go.AddComponent<AllyCtrl>() as AllyCtrl;
             AC.enabled = true;
             Backend.GameData.Delete("OwnUnitTable", where);
         }
+
+        //플레이어 스피드 연결
+        JoystickMovement._speed = _speed;
+        //공격 사거리
+        _attackRange = 5;
+
+        //_hp = 10000000;
+        //_currentHp = 10000000;
+
+        //hpbar 생성
+        GameObject gohp = GameObject.Find("GameScene_Canvas");
+        _hpBar = Managers.Resource.Instantiate("UI/TeamHpBar", gohp.transform.Find("HpBar").gameObject.transform);
+        //_hpBar = _hpBarCanvas.transform.Find("HpBar").gameObject;
+        _sliderHp = _hpBar.GetComponent<Slider>();
+        _sliderHp.maxValue = _hp; //피통 maxValue = 전체체력
+        _sliderHp.value = _hp;
+        _hpBar.SetActive(false); //생성,초기화 후 비활성
     }
 
-    protected override void UpdateAnimation() //공격과 죽음만 애니메이션 구현
+    //워프 이용, 씬 이동
+    private void OnTriggerEnter(Collider other)
     {
+        if(other.gameObject.tag == "Portal1")
+        {
+            OnWarpButton();
+            _whatWarp = 1;
+        }
+        if (other.gameObject.tag == "Portal2")
+        {
+            OnWarpButton();
+            _whatWarp = 2;
+        }
+        if( other.gameObject.tag == "GoMain")
+        {
+            GameSceneUIManager.Instance.popup_scene_confirm.GoSceneConfirmShow("Main", GoMain); //팝업창
+            StartCoroutine(Pause());
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.tag == "Portal1")
+        {
+            OffWarpButton();
+            _whatWarp = 0;
+        }
+        if (other.gameObject.tag == "Portal2")
+        {
+            OffWarpButton();
+            _whatWarp = 0;
+        }
+    }
+
+    protected override void UpdateAnimation() //공격과 죽음, 대기상태만 애니메이션 구현
+    {
+        _animator.ResetTrigger("Attack");
+        _animator.ResetTrigger("Idle");
         if (_state == CreatureState.Skill)
         {
-            _animator.Play("Attack");
+            _animator.SetTrigger("Attack");
         }
         else if (_state == CreatureState.Dead)
         {
-            _animator.Play("Die");
+            _animator.SetTrigger("Die");
+        }
+        else
+        {
+            _animator.SetTrigger("Idle");
         }
     }
 
     protected override void UpdateController()
     {
-        _enemyInAttackRange = Physics.CheckSphere(transform.position, _attackRange, _whatIsEnemy);
-
-        if (_enemyInAttackRange)
-            State = CreatureState.Skill;
+        if (State != CreatureState.Dead)
+        {
+            _enemyInAttackRange = Physics.CheckSphere(transform.position, _attackRange, _whatIsEnemy);
+            if (_enemyInAttackRange)
+                State = CreatureState.Skill;
+        }
         base.UpdateController();
 
         float Dis = Vector3.Distance(Camera.main.transform.position, ObstacleMinHeight.transform.position);
@@ -111,12 +180,18 @@ public class PlayerCtrl : CreatureCtrl
                 if (list_Obstacle.Count != 0) ReleaseAlpha();
             }
         }
-        if (Input.GetKeyDown(KeyCode.Q)) GoMain(); //(임시) 메인씬 가는 코드.
+    }
+
+    protected override void UpdateSkill()
+    {
+        base.UpdateSkill();
     }
 
     protected override void UpdateDead()
     {
-       //플레이어 죽었을 때 로직
+        //플레이어 죽었을 때 로직
+        
+        GoMain();
     }
 
     protected override void DefaultStatDBConnection()
@@ -130,11 +205,11 @@ public class PlayerCtrl : CreatureCtrl
         _appeal = GetPlayerStatData.playerStat.Appeal;
     }
 
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.black;
-        Gizmos.DrawWireSphere(transform.position, _attackRange); //black : 공격 사거리
-    }
+    //private void OnDrawGizmosSelected()
+    //{
+    //    Gizmos.color = Color.black;
+    //    Gizmos.DrawWireSphere(transform.position, _attackRange); //black : 공격 사거리
+    //}
 
     void ObstacleCollision()
     {
@@ -154,8 +229,14 @@ public class PlayerCtrl : CreatureCtrl
         list_Obstacle.Clear();
     }
 
-    public void OnCaptureButton() 
+    public void OnCaptureButton() //동료 수가 리더쉽 만큼 가득 차 있을 시 비활성 화
     {
+        int AllyCount = GameObject.FindGameObjectsWithTag("Team").Length; //동료 숫자 파악.
+        //포획 불가능.
+        if (AllyCount - 1 >= _leadership) //동료의 숫자가 Leadership 숫자를 넘지않도록, -1은 Player 자신.
+        {
+            return;
+        }
         _captureButton.SetActive(true);
     }
 
@@ -163,7 +244,10 @@ public class PlayerCtrl : CreatureCtrl
     {
         _getSpoilButton.SetActive(true);
     }
-
+    public void OnWarpButton()
+    {
+        _warpButton.SetActive(true);
+    }
     public void OffCaptureButton()
     {
         _captureButton.SetActive(false);
@@ -173,12 +257,16 @@ public class PlayerCtrl : CreatureCtrl
     {
         _getSpoilButton.SetActive(false);
     }
+    public void OffWarpButton()
+    {
+        _warpButton.SetActive(false);
+    }
 
     public void OnClickCaptureButton()
     {
         int AllyCount = GameObject.FindGameObjectsWithTag("Team").Length; //동료 숫자 파악.
         //포획 불가능.
-        if (AllyCount-1 >= GetPlayerStatData.playerStat.Leadership) //동료의 숫자가 Leadership 숫자를 넘지않도록, -1은 Player 자신.
+        if (AllyCount-1 >= _leadership) //동료의 숫자가 Leadership 숫자를 넘지않도록, -1은 Player 자신.
         {
             return;
         }
@@ -196,6 +284,7 @@ public class PlayerCtrl : CreatureCtrl
     {
         GameObject go = FindNearestObjectByTag("IsDeadEnemy"); //죽어있는상태 가장 가까운 적(Select).
         EnemyCtrl enemyCtrl = go.GetComponent<EnemyCtrl>(); // Select된 적 정보 Get.
+        
         //Get된 정보에 따른 전리품 획득 로직.
         switch(enemyCtrl._spoilnumber)
         {
@@ -211,10 +300,26 @@ public class PlayerCtrl : CreatureCtrl
             default:
                 break;
         }
-        //Enemy pool로 돌아가는 로직 임시로 Destroy.
-        Destroy(go);
+        EnemyPool.ReturnObject(enemyCtrl);
         OffCaptureButton(); //버튼 off
         OffGetSpoilButton(); //버튼 off
+    }
+
+    //워프
+    public void OnClickWarpButton()
+    {
+        if (_whatWarp == 1)
+        {
+            Debug.Log("워프 : " + _whatWarp);
+            transform.position = _portal2.position;
+        }
+        if (_whatWarp == 2)
+        {
+            Debug.Log("워프 : " + _whatWarp);
+            transform.position = _portal1.position;
+        }
+
+        OffWarpButton(); //버튼 off
     }
 
     public void GoMain() // 임시로 메인씬으로 돌아가는 로직, 디비 값 조정.
@@ -222,6 +327,7 @@ public class PlayerCtrl : CreatureCtrl
         GetPlayerStatData.GetComponent<BackEndGetTable>().AssetUpdate(); //자산 테이블 업데이트.
         GetPlayerStatData.GetComponent<BackEndGetTable>().KillCountUpdate();//킬 카운트 테이블 업데이트.
         InsertOwnUnitTable(); //OwnCreature Table 업데이트.
+        DepthImage.gameObject.SetActive(true);
         Managers.Scene.LoadScene(Define.Scene.Main);
     }
 
@@ -271,5 +377,11 @@ public class PlayerCtrl : CreatureCtrl
                 }
             }
         }
+    }
+
+    IEnumerator Pause()
+    {
+        yield return new WaitForSeconds(0.1f);
+        Time.timeScale = 0;
     }
 }

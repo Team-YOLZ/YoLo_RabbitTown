@@ -97,7 +97,7 @@ public class EnemyPool : MonoBehaviour
     }
 
     //pool객체 생성 후 Init()으로 count 수 만큼 enemy 생성 후, pool객체 Dictionary에 Add
-    public static void CreatePool(string enemyName, int count =15)
+    public static void CreatePool(string enemyName, int count =10)
     {
         Pool pool = new Pool();
         pool.Init(enemyName, count);

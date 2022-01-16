@@ -26,5 +26,6 @@ public class UnitData : ScriptableObject
         public int CanCapturePercent; //죽었을 시 포획 가능 확률.
         public int DetectionRange; //적 발견 사거리
         public int PlayerRange; //플레이어와 동료 사거리
+        public int PlayerRangeWellOff; // 적 공격 시 플레이어와 동료 거리 널널하게 하기 위한
     }
 }

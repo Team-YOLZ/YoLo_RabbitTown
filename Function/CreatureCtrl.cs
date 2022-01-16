@@ -2,35 +2,41 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 using static Define;
 
 // 에니메이션 플레이, 기본적인 요소 초기화 , 공격로직, 받은데미지 로직, 
 
 public class CreatureCtrl : MonoBehaviour
 {
-    //TODO: 나중에 SerializeField 지워야 함.
-
     //디비에서 할당받아야하는 공통 정보.
-    [SerializeField] protected int _hp;          // 전체체력 
-    [SerializeField] protected float _speed;     //이동속도
-    [SerializeField] protected float _atk;       //공격력
-    [SerializeField] protected float _atkSpeed;  //공격속도
+    protected int _hp;          // 전체체력 
+    protected float _speed;     //이동속도
+    protected float _atk;       //공격력
+    protected float _atkSpeed;  //공격속도
 
     //공통 고유 정보.
-    [SerializeField] protected int _attackRange;//공격사거리 <-agent. stopping distance
+    protected int _attackRange;//공격사거리 <-agent. stopping distance
     public bool _rangeAttacktype = false; //근거리(false) or 원거리(true)
     protected Animator _animator;
-    [SerializeField] protected CreatureState _state = CreatureState.Idle;
-    [SerializeField] protected GameObject _creature;// 자기자신
+    protected CreatureState _state = CreatureState.Idle;
+    protected GameObject _creature;// 자기자신
 
     //변경 정보.
-    [SerializeField] protected float _currentHp;  //현재 체력
-    [SerializeField] private BoxCollider boxCollider;
+    protected float _currentHp;  //현재 체력
+    private BoxCollider boxCollider;
 
     //Creature 공통 정보.
     public Renderer render;
     //공격
     Coroutine _coSkill;
+
+    //hp bar
+    public GameObject _hpBar;
+    //public GameObject _hpBarCanvas;
+    public Slider _sliderHp;
+
+
 
     public virtual CreatureState State
     {
@@ -59,6 +65,12 @@ public class CreatureCtrl : MonoBehaviour
     {
         UpdateController();
     }
+    void FixedUpdate()
+    {
+        //hpBar 머리위에 고정
+        if (_hpBar != null)
+            _hpBar.transform.position = Camera.main.WorldToScreenPoint(transform.position + new Vector3(0, 3f, 0));
+    }
 
     protected virtual void Init() //초기화 부분(Awake)
     {
@@ -69,26 +81,31 @@ public class CreatureCtrl : MonoBehaviour
         DefaultStatDBConnection(); //디폴트능력치수치 디비와 연결
         _animator = _creature.GetComponent<Animator>();
         _currentHp = _hp;
+
     }
 
     protected virtual void UpdateAnimation() //애니메이션 처리
     {
+        _animator.ResetTrigger("Die");
+        _animator.ResetTrigger("Idle");
+        _animator.ResetTrigger("Attack");
+        _animator.ResetTrigger("Run");
         if (_state == CreatureState.Dead)
         {
             StopAllCoroutines();
-            _animator.SetTrigger("Dead");
+            _animator.SetTrigger("Die");
         }
         else if (_state == CreatureState.Moving)
         {
-            _animator.Play("Run");
+            _animator.SetTrigger("Run");
         }
         else if (_state == CreatureState.Skill)
         {
-            _animator.Play("Attack");
+            _animator.SetTrigger("Attack");
         }
-        else 
+        else
         {
-            _animator.Play("Idle");
+            _animator.SetTrigger("Idle");
         }
     }
 
@@ -138,10 +155,11 @@ public class CreatureCtrl : MonoBehaviour
 
         // 피격 판정
         if (_creature.CompareTag("Team"))
-        {
             go = FindNearestObjectByTag("Enemy");
-        }
-        else go = FindNearestObjectByTag("Team");
+        else if (_creature.CompareTag("Enemy"))
+            go = FindNearestObjectByTag("Team");
+        else
+            go = null;
 
         if (go != null)
         {
@@ -159,10 +177,9 @@ public class CreatureCtrl : MonoBehaviour
             CreatureCtrl cc = go.GetComponent<CreatureCtrl>();
             if (cc != null)
                 cc.OnDamaged(_atk);
-            Debug.Log("On Hit !");
         }
         // 대기 시간
-        yield return new WaitForSeconds(1/_atkSpeed);
+        yield return new WaitForSeconds(1 / _atkSpeed);
         _coSkill = null;
         State = CreatureState.Idle; // <- 공격하는게 어색하다 싶으면 Moving으로 바꿔보기
     }
@@ -172,12 +189,20 @@ public class CreatureCtrl : MonoBehaviour
         if (_currentHp > 0)
         {
             _currentHp -= damage;
+            //체력바 활성화
+            _hpBar.SetActive(true);
+            _sliderHp.value = _currentHp;
         }
-
         else
         {
+            StopCoroutine(HpBarSetActive());
+            Destroy(_hpBar);
             State = CreatureState.Dead;
         }
+        // HpBar 비활성화
+        StopCoroutine(HpBarSetActive());
+        StartCoroutine(HpBarSetActive());
+
     }
 
     protected virtual void DefaultStatDBConnection() //유닛 DefaultStatDBConnection Enemy,Ally => o Player => x
@@ -237,7 +262,7 @@ public class CreatureCtrl : MonoBehaviour
 
     public void BuffHP(int bHP) //체력 버프 
     {
-        if (_currentHp + bHP > 0) 
+        if (_currentHp + bHP > 0)
         {
             _hp += bHP;
             _currentHp += bHP;
@@ -270,6 +295,7 @@ public class CreatureCtrl : MonoBehaviour
      */
     protected GameObject FindNearestObjectByTag(string tag)
     {
+
         // 탐색할 오브젝트 목록을 List 로 저장
         var objects = GameObject.FindGameObjectsWithTag(tag).ToList();
 
@@ -281,6 +307,20 @@ public class CreatureCtrl : MonoBehaviour
             })
         .FirstOrDefault();
 
-        return neareastObject;
+        if(Vector3.Distance(transform.position, neareastObject.transform.position) <= 15)
+            return neareastObject;
+
+        return null;
+    }
+
+    //5초동안 공격을 안받고 있으면 체력바 비활성화
+    IEnumerator HpBarSetActive()
+    {
+        float curhp = _currentHp;
+
+        yield return new WaitForSeconds(5.0f);
+        if (curhp == _currentHp)
+            if (_hpBar != null)
+                _hpBar.SetActive(false);
     }
 }

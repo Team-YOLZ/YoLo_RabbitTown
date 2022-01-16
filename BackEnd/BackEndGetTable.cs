@@ -11,6 +11,9 @@ public class BackEndGetTable : MonoBehaviour
     private string AssetTableKey;
     private string CountTableKey;
 
+    private int needspoil1;
+    private int needspoil2;
+
     private void Awake()
     {
         InitUserStatTable(); //스탯 테이블 입력.
@@ -46,7 +49,7 @@ public class BackEndGetTable : MonoBehaviour
         {
             OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
         }
-        string[] select = { "Attack", "AttackSpeed", "MovingSpeed", "Hp", "Leadership", "Appeal", "owner_inDate"};
+        string[] select = { "Attack", "AttackSpeed", "MovingSpeed", "Hp", "Leadership", "Appeal", "owner_inDate" };
 
         // 테이블 내 해당 rowIndate를 지닌 row를 조회
         // select에 존재하는 컬럼만 리턴
@@ -80,7 +83,7 @@ public class BackEndGetTable : MonoBehaviour
         {
             OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
         }
-        string[] select = { "Coin", "Spoil1", "Spoil2", "Spoil3", "Spoil4" };
+        string[] select = { "Coin", "Spoil1", "Spoil2" };
 
         // 테이블 내 해당 rowIndate를 지닌 row를 조회
         // select에 존재하는 컬럼만 리턴
@@ -114,7 +117,8 @@ public class BackEndGetTable : MonoBehaviour
         {
             OwnerIndate = bro.Rows()[i]["inDate"]["S"].ToString();
         }
-        string[] select = { "Chicken1", "Chicken2", "Chicken3", "Cow1", "Cow2", "Cow3", "Goat1", "Goat2", "Horse1", "Horse2", "Horse3" };
+        string[] select = { "Chicken1", "Chicken2", "Chicken3", "Cow1", "Cow2", "Cow3",
+             "Horse1", "Horse2", "Horse3", "Goat1", "Goat2","Duck1", "Duck2", "Duck3", "Sheep1", "Sheep2" };
 
         // 테이블 내 해당 rowIndate를 지닌 row를 조회
         // select에 존재하는 컬럼만 리턴
@@ -124,37 +128,192 @@ public class BackEndGetTable : MonoBehaviour
         CountTableKey = OwnerIndate;
     }
 
-    //(임시 양식) 공격력 증가 버튼.
+    //공격력 증가 버튼.
     public void UpAttackButton()
     {
-        // 1단계 DB 수정.
-        UpAttackStat();    // BackEnd UserTable 스탯 증가.
-        ConsumptionCoin(); // BackEnd UserAssetTable 코인 감소.
-
-        // 2단계 수정된 DB 정보 다시 PlayerData 클래스(싱글톤 객체)에 할당.
-        InitUserStatTable(); //수정된 UserTable 정보 갱신.
-        InitUserAssetTable(); //수정된 UserAssetTable 정보 갱신.
-
-        //3단계 수정된 PlayerData 정보 스텟 페이지에 재 할당. => MainScene 컴포넌트로 기능 이전.
-        //MainPage.EditPage(); //스탯 페이지 갱신.
+        if (ConsumptionCoin())
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(true, 10, "Coin", UpAttackStat);
+        else
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(false, 10, "Coin", null, 10 - playerAsset.Coin);
     }
+
+    public void UpAttackSpeedButton()
+    {
+        if (ConsumptionCoin())
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(true, 10, "Coin", UpAttackSpeedStat);
+        else
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(false, 10, "Coin", null, 10 - playerAsset.Coin);
+    }
+
+    public void UpMoveSpeedButton()
+    {
+        if (ConsumptionCoin())
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(true, 10, "Coin", UpMoveSpeedStat);
+        else
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(false, 10, "Coin", null, 10 - playerAsset.Coin);
+    }
+
+    public void UpHPButton()
+    {
+        if (ConsumptionCoin())
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(true, 10, "Coin", UpHPStat);
+        else
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(false, 10, "Coin", null, 10 - playerAsset.Coin);
+    }
+
+    public void UpLeadershipButton()
+    {
+        if (ConsumptionSpoil1())
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(true, needspoil1, "전리품1", UpLeaderShipStat);
+        else
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(false, needspoil1, "전리품1", null, needspoil1 - playerAsset.Spoil1);
+    }
+
+    public void UpAppealButton()
+    {
+        if (ConsumptionSpoil2())
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(true, needspoil2, "전리품2", UpAppealStat);
+        else
+            MainSceneUIManager.Instance.popup_confirm.ConfirmShow(false, needspoil2, "전리품2", null, needspoil2 - playerAsset.Spoil2);
+    }
+
 
     //임시 공격력 증가 함수.
     private void UpAttackStat()
     {
-        Param updateParam = new Param();
-        updateParam.AddCalculation("Attack", GameInfoOperator.addition, 10); // 기존 데이터 Attack에서 10만큼 더 추가
+        if (playerAsset.Coin >= 10) //콜백 두번 넘어갈 경우 방어코드
+        {
+            Param updateParam = new Param();
+            updateParam.AddCalculation("Attack", GameInfoOperator.addition, 10); // 기존 데이터 Attack에서 10만큼 더 추가
 
-        Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+            Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+
+            InitUserStatTable();
+            InitUserAssetTable();
+        }
+        return;
+    }
+
+    private void UpAttackSpeedStat()
+    {
+        if (playerAsset.Coin >= 10)
+        {
+            Param updateParam = new Param();
+            updateParam.AddCalculation("AttackSpeed", GameInfoOperator.multiplication, 1.1f); // 기존 데이터 Attack에서 10만큼 더 추가
+
+            Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+
+
+            InitUserStatTable();
+            InitUserAssetTable();
+        }
+        return;
+    }
+
+    private void UpMoveSpeedStat()
+    {
+        if (playerAsset.Coin >= 10)
+        {
+            Param updateParam = new Param();
+            updateParam.AddCalculation("MovingSpeed", GameInfoOperator.multiplication, 1.1f); // 기존 데이터 Attack에서 10만큼 더 추가
+
+            Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+
+
+            InitUserStatTable();
+            InitUserAssetTable();
+        }
+        return;
+    }
+
+    private void UpHPStat()
+    {
+        if (playerAsset.Coin >= 10)
+        {
+            Param updateParam = new Param();
+            updateParam.AddCalculation("Hp", GameInfoOperator.addition, 20); // 기존 데이터 Attack에서 10만큼 더 추가
+
+            Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+
+
+            InitUserStatTable();
+            InitUserAssetTable();
+        }
+        return;
+    }
+
+    private void UpLeaderShipStat()
+    {
+        if (playerAsset.Spoil1 >= needspoil1)
+        {
+            Param updateParam = new Param();
+            updateParam.AddCalculation("Leadership", GameInfoOperator.addition, 1); // 기존 데이터 Attack에서 10만큼 더 추가
+
+            Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+
+
+            InitUserStatTable();
+            InitUserAssetTable();
+        }
+        return;
+    }
+
+    private void UpAppealStat()
+    {
+        if (playerAsset.Spoil2 >= needspoil2)
+        {
+            Param updateParam = new Param();
+            updateParam.AddCalculation("Appeal", GameInfoOperator.addition, 1); // 기존 데이터 Attack에서 10만큼 더 추가
+
+            Backend.GameData.UpdateWithCalculation("UserStatTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+
+
+            InitUserStatTable();
+            InitUserAssetTable();
+        }
+        return;
     }
 
     //임시 스탯 증가 비용 지불.
-    private void ConsumptionCoin()
+    private bool ConsumptionCoin()
     {
         Param updateParam = new Param();
-        updateParam.AddCalculation("Coin", GameInfoOperator.subtraction, 10); // 기존 데이터 Attack에서 10만큼 더 추가
 
-        Backend.GameData.UpdateWithCalculation("UserAssetTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+        if (playerAsset.Coin >= 10)
+        {
+            updateParam.AddCalculation("Coin", GameInfoOperator.subtraction, 10); // 기존 데이터 Attack에서 10만큼 더 추가
+            Backend.GameData.UpdateWithCalculation("UserAssetTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+            return true;
+        }
+        return false;
+    }
+
+    private bool ConsumptionSpoil1()
+    {
+        Param updateParam = new Param();
+
+        needspoil1 = (playerStat.Leadership - 1) * 2;
+        if (playerAsset.Spoil1 >= needspoil1)
+        {
+            updateParam.AddCalculation("Spoil1", GameInfoOperator.subtraction, needspoil1);
+            Backend.GameData.UpdateWithCalculation("UserAssetTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+            return true;
+        }
+        return false;
+    }
+
+    private bool ConsumptionSpoil2()
+    {
+        Param updateParam = new Param();
+
+        needspoil2 = (playerStat.Appeal + 1) * 2;
+        if (playerAsset.Spoil2 >= needspoil2)
+        {
+            updateParam.AddCalculation("Spoil2", GameInfoOperator.subtraction, needspoil2);
+            Backend.GameData.UpdateWithCalculation("UserAssetTable", new Where(), updateParam); //백엔드 UserTable에 적용.
+            return true;
+        }
+        return false;
     }
 
     public void AssetUpdate()
@@ -163,8 +322,6 @@ public class BackEndGetTable : MonoBehaviour
         updateParam.Add("Coin", playerAsset.Coin);
         updateParam.Add("Spoil1", playerAsset.Spoil1);
         updateParam.Add("Spoil2", playerAsset.Spoil2);
-        updateParam.Add("Spoil3", playerAsset.Spoil3);
-        updateParam.Add("Spoil4", playerAsset.Spoil4);
 
         Backend.GameData.Update("UserAssetTable", AssetTableKey, updateParam);
     }
