@@ -6,13 +6,11 @@ public class Define
 {
     public enum MeadowUnit //초원유닛 
     {
-        Null, 
-        Chicken1, Chicken2, Chicken3,
-        Cow1, Cow2, Cow3,
-        Duck1, Duck2, Duck3,
-        Horse1, Horse2, Horse3,
-        Sheep1, Sheep2,
-        Goat1, Goat2,
+        Null,
+        Chicken1, Cow1, Duck1, Horse1, Sheep1, Goat1, //1~6
+        Chicken2, Cow2, Duck2, Horse2, Sheep2, Goat2, //7~12
+        Chicken3, Cow3, Duck3, Horse3, //13~16
+        Boss1,
     }
     public enum CreatureState
     {

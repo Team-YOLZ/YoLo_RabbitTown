@@ -8,13 +8,14 @@ using UnityEngine;
 public class ArrowPool : MonoBehaviour
 {
     private Queue<ArrowCtrl> _queue = new Queue<ArrowCtrl>();
-    void Awake()
+    void Start()
     {
-        Init(4);
+        Init(2);
     }
     private ArrowCtrl CreateNewObject() //비 활성으로 arrow 만들어 주기
     {
-        var obj = Managers.Resource.Instantiate($"Creature/Arrow_{(gameObject.name).Substring(0, gameObject.name.Length - 1)}", transform).GetComponent<ArrowCtrl>();
+        var obj = Managers.Resource.Instantiate($"Creature_YJ/Arrow_{(gameObject.name).Substring(0, gameObject.name.Length - 1)}", transform).GetComponent<ArrowCtrl>();
+        
         obj.gameObject.SetActive(false);
         return obj;
     }

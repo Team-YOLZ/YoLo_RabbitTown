@@ -38,14 +38,6 @@ public class WorldObjectGenerator : MonoBehaviour
 
     GameObject _obj;  //이거 게임오브젝트 변수의 위치 어디가 좋을까...
 
-    //public GameObject[][] objTree;
-    //public GameObject[][] objGrass;
-    //public GameObject[][] objFlower;
-    //public GameObject[][] objRock;
-    //public GameObject[][] objWell; 
-    //public GameObject[][] objBush;
-    //public GameObject[][] objCloud;
-
     int GetRandTreeCount() { return Random.Range(_treeMaxCount / 2, _treeMaxCount); } // 나무 수 
     int GetRandGrassCount() { return Random.Range(_grassMaxCount / 2, _grassMaxCount); } // 잔디 
     int GetRandFlowerCount() { return Random.Range(_flowerMaxCount / 2, _flowerMaxCount); } // 꽃  
@@ -62,21 +54,6 @@ public class WorldObjectGenerator : MonoBehaviour
             if (WorldMap == null)
                 WorldMap = Managers.Resource.Instantiate("Map/WorldMap");
         }
-        //하이라키창에서의 배열 객체는 스크립트로 추가, 삭제를 못하나...?????
-        //int i = 0;
-        //while (Util.FindChind(WorldMap, $"GenerateFieldPos{i}", true) != null) //최상위 부모 WorldMap에서 _generateFieldPos 찾는 과정
-        //{
-        //    if (_generateFieldPos[i] != null) { i++; continue; }
-        //    _generateFieldPos[i] = Util.FindChind(WorldMap, $"GenerateFieldPos{i}", true);
-        //    i++;
-        //}
-        //i = 0;
-        //while (Util.FindChind(WorldMap, $"GenerateSkyPos{i}", true) != null)
-        //{
-        //    if (_generateSkyPos[i] != null) { i++; continue; }
-        //    _generateSkyPos[i] = Util.FindChind(WorldMap, $"GenerateSkyPos{i}", true);
-        //    i++;
-        //}
 
         _layerMask = 1 << 6; //6 = LayerMask.NameToLayer("Field")
         Generate();
@@ -96,10 +73,12 @@ public class WorldObjectGenerator : MonoBehaviour
             for (int i = 0; i < GetRandTreeCount(); i++) //나무
             {
                 int treeNum = Random.Range(0, 6); // Tree Type
-                float treeScale = Random.Range(0, 0.2f); //Tree Scale
+                //float treeScale = Random.Range(0, 0.01f); //Tree Scale
                 _obj = Managers.Game.Spawn(Define.WorldObject.Tree, $"Map/Tree{treeNum}", Trees.transform);
                 _obj.transform.position = RandPosOrNormal(p).randPos;
-                _obj.transform.localScale += new Vector3(0, 0, -treeScale); //나무 랜덤으로 높이 조절
+                if( treeNum ==2 || treeNum == 4)
+                    _obj.transform.position -= new Vector3(0, 10f, 0);
+                //_obj.transform.localScale += new Vector3(0, 0, -treeScale); //나무 랜덤으로 높이 조절
             }
             for (int i = 0; i < GetRandGrassCount(); i++) //잔디
             {
@@ -116,6 +95,7 @@ public class WorldObjectGenerator : MonoBehaviour
                 int flowerNum = Random.Range(0, 5);
                 _obj = Managers.Game.Spawn(Define.WorldObject.Tree, $"Map/Flower{flowerNum}", Flowers.transform);
                 _obj.transform.position = RandPosOrNormal(p).randPos;
+                _obj.transform.rotation = Quaternion.Euler(new Vector3(0, Random.value * 360.0f, 0));
             }
             for (int i = 0; i < GetRandRockCount(); i++) //바위
             {
@@ -183,18 +163,18 @@ public class WorldObjectGenerator : MonoBehaviour
     }
 
     //생성 위치와 범위 보기
-    private void OnDrawGizmos()
-    {
-        for (int i = 0; i < _generateFieldPos.Length; i++)
-        {
-            Gizmos.color = Color.gray;
-            Gizmos.DrawWireSphere(_generateFieldPos[i].transform.position, _spawnFieldRadius);
-        }
+    //private void OnDrawGizmos()
+    //{
+    //    for (int i = 0; i < _generateFieldPos.Length; i++)
+    //    {
+    //        Gizmos.color = Color.gray;
+    //        Gizmos.DrawWireSphere(_generateFieldPos[i].transform.position, _spawnFieldRadius);
+    //    }
 
-        for (int i = 0; i < _generateSkyPos.Length; i++)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(_generateSkyPos[i].transform.position, _spawnSkyRadius);
-        }
-    }
+    //    for (int i = 0; i < _generateSkyPos.Length; i++)
+    //    {
+    //        Gizmos.color = Color.red;
+    //        Gizmos.DrawWireSphere(_generateSkyPos[i].transform.position, _spawnSkyRadius);
+    //    }
+    //}
 }

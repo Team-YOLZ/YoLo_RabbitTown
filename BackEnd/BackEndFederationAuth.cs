@@ -13,15 +13,39 @@ public class BackEndFederationAuth : MonoBehaviour
     [SerializeField] private GameObject AppleLoginBtn;
     [SerializeField] private GameObject LoginCanvas;
     [SerializeField] private GameObject TapCanvs;
+
+    [SerializeField] private GameObject object_SignUp;
+    [SerializeField] private GameObject object_Login;
     [SerializeField] private InputField InputField_Id; //에디터 환경 위해 임시 커스텀 로그인 환경 아이디필드
-    [SerializeField] private InputField InputField_Pw; 
+    [SerializeField] private InputField InputField_Pw;
+
+    [Header("토큰 날리기")]
+    public bool deleteToken;
+
     private void Awake()
     {
+        Delete();
+
 #if UNITY_ANDROID
         GoogleLoginBtn.SetActive(true);
+        object_SignUp.SetActive(false);
+        object_Login.SetActive(false);
+        InputField_Id.gameObject.SetActive(false);
+        InputField_Pw.gameObject.SetActive(false);
 #elif UNITY_IOS
         AppleLoginBtn.SetActive(true);
+        object_SignUp.SetActive(false);
+        object_Login.SetActive(false);
+        InputField_Id.gameObject.SetActive(false);
+        InputField_Pw.gameObject.SetActive(false);
 #endif
+    }
+
+    private void Delete()
+    {
+        if (deleteToken)
+            Backend.BMember.RefreshTheBackendToken();
+        return;
     }
 
     void Start()
@@ -41,15 +65,19 @@ public class BackEndFederationAuth : MonoBehaviour
         //GPGS 시작.
         PlayGamesPlatform.Activate();
 #endif
-        BackendReturnObject bro = Backend.BMember.LoginWithTheBackendToken();
-        if (bro.IsSuccess())
+        if (!deleteToken)
         {
-            LoginCanvas.SetActive(false);
-            TapCanvs.SetActive(true);
-            //Managers.Scene.LoadScene(Define.Scene.Main);
-            //BackendReturnObject bro2 = Backend.BMember.GetUserInfo();
-            //string federationId = bro2.GetReturnValuetoJSON()["row"]["federationId"].ToString();
-            //Debug.Log(federationId);
+            BackendReturnObject bro = Backend.BMember.LoginWithTheBackendToken();
+
+            if (bro.IsSuccess())
+            {
+                LoginCanvas.SetActive(false);
+                TapCanvs.SetActive(true);
+                //Managers.Scene.LoadScene(Define.Scene.Main);
+                //BackendReturnObject bro2 = Backend.BMember.GetUserInfo();
+                //string federationId = bro2.GetReturnValuetoJSON()["row"]["federationId"].ToString();
+                //Debug.Log(federationId);
+            }
         }
     }
 #if UNITY_ANDROID
@@ -180,6 +208,28 @@ public class BackEndFederationAuth : MonoBehaviour
     public void OnClickCutomLogin()
     {
         BackendReturnObject bro = Backend.BMember.CustomLogin(InputField_Id.text, InputField_Pw.text);
+        if (bro.IsSuccess())
+        {
+            Debug.Log("로그인에 성공했습니다");
+            LoginCanvas.SetActive(false);
+            TapCanvs.SetActive(true);
+        }
+    }
+
+    public void OnClickGuestLogin()
+    {
+        int ran = Random.Range(1, 10000);
+        BackendReturnObject bro = Backend.BMember.CustomSignUp($"Guest_{ran}", $"Guest_{ran}");
+        if(bro.IsSuccess())
+        {
+            Debug.Log("회원가입에 성공했습니다.");
+            gameObject.GetComponent<BackEndGameInfo>().InsertUserStatDataTable();//유저 스탯 테이블 생성.
+            gameObject.GetComponent<BackEndGameInfo>().InsertUserAssetDataTable();//유저 자산 테이블 생성.
+            gameObject.GetComponent<BackEndGameInfo>().InsertUnitCaptureCountTable();//유저 유닛 포획 도감 테이블 생성.
+        }
+
+        bro = Backend.BMember.CustomLogin($"Guest_{ran}", $"Guest_{ran}");
+
         if (bro.IsSuccess())
         {
             Debug.Log("로그인에 성공했습니다");

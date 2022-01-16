@@ -35,7 +35,8 @@ public class JoystickMovement : MonoBehaviour
     float circleradius;
     private Animator player_anim;
     Rigidbody player_rb;
-    public float _speed;    
+
+    static public float _speed;
 
     void Awake()
     {
@@ -51,7 +52,7 @@ public class JoystickMovement : MonoBehaviour
     }
 
     private void FixedUpdate()
-    {        
+    {
         Debug.DrawRay(obj_CameraArm.position, new Vector3(obj_CameraArm.forward.x, 0f, obj_CameraArm.forward.z).normalized, Color.red);
 
         //카메라의 forward 중심으로 방향벡터 설정 https://forum.unity.com/threads/what-is-transform-forward.338384/ 참고
@@ -80,7 +81,7 @@ public class JoystickMovement : MonoBehaviour
     #region EventTrigger
     public void PointDown(BaseEventData baseEventData) //조이스틱 터치시 event
     {
-        Debug.Log("Joystick_Point down");
+        //Debug.Log("Joystick_Point down");
 
         PointerEventData pointerEventData = baseEventData as PointerEventData;
 
@@ -99,7 +100,7 @@ public class JoystickMovement : MonoBehaviour
 
     public void Drag(BaseEventData baseEventData)
     {
-        Debug.Log("Joystick_Drag");
+        //Debug.Log("Joystick_Drag");
 
         PointerEventData pointerEventData = baseEventData as PointerEventData;
         Vector3 DragPosition = pointerEventData.position; // 드레그 중인 포인터 위치.
@@ -131,7 +132,7 @@ public class JoystickMovement : MonoBehaviour
 
     public void Drop()
     {
-        Debug.Log("Joystick_Joystick_Drop");
+        //Debug.Log("Joystick_Joystick_Drop");
 
         //스틱 위치 방향 벡터 초기화
         _smallcircle.anchoredPosition = Vector2.zero;
